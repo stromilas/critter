@@ -56,7 +56,7 @@ class Post(Base):
   __tablename__ = 'post'
 
   id = Column(Integer, primary_key=True)
-  reply_id = Column(Integer, ForeignKey('id'), nullable=True)
+  reply_id = Column(Integer, ForeignKey('post.id'), nullable=True)
   replies = relationship('Post', back_populates='replies')
   text = Column(String(280))
   user_id = Column(Integer, ForeignKey('user.id'))
