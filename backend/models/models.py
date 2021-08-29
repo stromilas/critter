@@ -17,6 +17,7 @@ follower = Table(
     Base.metadata,
     Column("left_id", Integer, ForeignKey("user.id"), primary_key=True),
     Column("right_id", Integer, ForeignKey("user.id"), primary_key=True),
+    Column("created_at", DateTime, default=func.now()),
 )
 
 
@@ -44,6 +45,7 @@ class Interaction(Base):
     __tablename__ = "interaction"
 
     id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=func.now())
     user_id = Column(Integer, ForeignKey("user.id"))
     post_id = Column(Integer, ForeignKey("post.id"))
     type = Column(Enum("like", "retweet", "mention", name="interaction_type"))
@@ -56,6 +58,7 @@ class Post(Base):
     parent_id = Column(Integer, ForeignKey("post.id"), nullable=True)
     replies = relationship("Post", backref=backref("parent", remote_side=[id]))
     text = Column(String(280))
+    created_at = Column(DateTime, default=func.now())
     user_id = Column(Integer, ForeignKey("user.id"))
     interactions = relationship("Interaction", backref="post")
     media = relationship("Media")
