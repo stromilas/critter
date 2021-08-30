@@ -25,7 +25,7 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    username = Column(Text)
+    username = Column(Text, unique=True)
     name = Column(Text)
     website = Column(Text, nullable=True)
     location = Column(Text, nullable=True)
