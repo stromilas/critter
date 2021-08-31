@@ -1,5 +1,6 @@
 from critter.models import User
 from critter.database import session
+from critter.common import authenticated
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException

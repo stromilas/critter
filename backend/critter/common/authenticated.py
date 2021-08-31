@@ -2,16 +2,12 @@ from datetime import datetime
 from critter.database import session
 from critter.models.models import User
 from critter.schemas.auth import JWTContext
+from critter.core.security import token_scheme
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from jose import jwt
 from sqlalchemy import select
-
-jwt_context = JWTContext(
-    secret_key=env.get("SECRET_KEY"),
-    algorithm=env.get("ALGORITHM"),
-    access_token_expire_minutes=env.get("ACCESS_TOKEN_EXPIRE_MINUTES"),
-)
+from critter.core.security import jwt_context
 
 def authenticated(token: str = Depends(token_scheme)) -> User:
     try:
