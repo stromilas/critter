@@ -1,0 +1,39 @@
+from datetime import datetime
+from critter.database import session
+from critter.models.models import User
+from critter.schemas.auth import JWTContext
+from fastapi.exceptions import HTTPException
+from fastapi.param_functions import Depends
+from jose import jwt
+from sqlalchemy import select
+
+jwt_context = JWTContext(
+    secret_key=env.get("SECRET_KEY"),
+    algorithm=env.get("ALGORITHM"),
+    access_token_expire_minutes=env.get("ACCESS_TOKEN_EXPIRE_MINUTES"),
+)
+
+def authenticated(token: str = Depends(token_scheme)) -> User:
+    try:
+        payload = jwt.decode(token, jwt_context.secret_key, algorithms=[jwt_context.algorithm])
+        
+        current_date = datetime.utcnow().timestamp()
+        expires_date = payload['exp']
+        
+        if current_date > expires_date:
+            raise HTTPException(401, detail='Expired token')
+
+        stmt = select(User).filter_by(username=payload['username'])
+        user = session.execute(stmt).scalar()
+
+        if not user:
+            raise HTTPException(401, detail='User not found')
+
+        return user
+
+    except HTTPException as e:
+        raise HTTPException(**e.__dict__)
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(500)

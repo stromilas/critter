@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from critter.routers import auth
+from critter.routers import chirps
 
 app = FastAPI()
 
@@ -15,3 +16,4 @@ app.add_middleware(
 
 # Add Routers
 app.include_router(auth.router)
+app.include_router(chirps.router)

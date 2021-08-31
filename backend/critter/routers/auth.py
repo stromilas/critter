@@ -1,30 +1,19 @@
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
-from os import environ as env
+
 from critter.models import User
 from critter.database import session
-from critter.types.auth import JWTContext, SignUpForm, Token
+from critter.schemas.auth import JWTContext, SignUpForm, Token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
-
+from critter.core.security import jwt_context, password_context
 
 # Configuration
 router = APIRouter(
-    prefix="/auth", tags=["auth"], responses={404: {"description": "Not found"}}
+    prefix="/auth", tags=["auth"], responses={404: {"detail": "Not found"}}
 )
-load_dotenv()
-token = OAuth2PasswordBearer(tokenUrl="auth/login")
-password_context = CryptContext(schemes=["bcrypt"])
-jwt_context = JWTContext(
-    secret_key=env.get("SECRET_KEY"),
-    algorithm=env.get("ALGORITHM"),
-    access_token_expire_minutes=env.get("ACCESS_TOKEN_EXPIRE_MINUTES"),
-)
-
 
 def tokenise(username: str, name: str) -> Token:
     unencoded = {
