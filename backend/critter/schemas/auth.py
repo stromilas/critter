@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from fastapi.param_functions import Depends, Form
+from fastapi.param_functions import Form
 
 class JWTContext(BaseModel):
     secret_key: str

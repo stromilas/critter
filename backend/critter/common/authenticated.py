@@ -1,7 +1,6 @@
 from datetime import datetime
 from critter.database import session
 from critter.models.models import User
-from critter.schemas.auth import JWTContext
 from critter.core.security import token_scheme
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
