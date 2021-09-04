@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useContext } from 'react'
 import {
   Container,
   Button,
@@ -9,10 +9,14 @@ import {
   Grid,
 } from '@material-ui/core'
 import { LockOutlined } from '@material-ui/icons'
-import { Link as RouteLink } from 'react-router-dom'
+import { Link as RouteLink, useHistory } from 'react-router-dom'
+import AuthContext from '../context/auth-context'
 import api from '../core/api'
 
 const SignIn = () => {
+  const authContext = useContext(AuthContext)
+  const history = useHistory()
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const body = new FormData()
@@ -20,8 +24,11 @@ const SignIn = () => {
     body.append('password', e.target.password.value)
     api
       .post('auth/login', body, { 'Content-Type': 'multipart/form-data'})
-      .then((res) => console.log(res))
-      .catch((e) => console.log(e))
+      .then(res => {
+        authContext.login(res.data.access_token)
+        history.push('/')
+      })
+      .catch((e) => console.error(e))
   }
 
   return (
@@ -49,7 +56,7 @@ const SignIn = () => {
             id="username"
             label="Username"
             name="username"
-            autocomplete="username"
+            autoComplete="username"
             autoFocus
           />
           <TextField
@@ -60,7 +67,7 @@ const SignIn = () => {
             id="password"
             label="password"
             name="password"
-            autocomplete="password"
+            autoComplete="password"
             autoFocus
           />
           <Button

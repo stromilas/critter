@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/stromjust/critter/issues"
   },
-  "homepage": "https://github.com/stromjust/critter#readme"
+  "homepage": "https://github.com/stromjust/critter#readme",
+  "dependencies": {
+    "@material-ui/core": "^5.0.0-beta.5"
+  }
 }

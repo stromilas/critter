@@ -1,23 +1,44 @@
 import React from 'react'
-import { BrowserRouter as Router, Route, Redirect } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
+import { BrowserRouter as Router, Link, Route } from 'react-router-dom'
+import { CssBaseline, Tab, Tabs } from '@material-ui/core'
+import Header from './components/Header'
+import Home from './pages/Home'
 import SignIn from './pages/SignIn'
-import { CssBaseline } from '@material-ui/core'
 
 const App = () => {
+
   return (
-    <div>
-      <CssBaseline />
-      <Router>
-        <Route path="/" exact>
-          <Dashboard />
-          <Redirect to="/signin" />
+    <Router>
+      <div>
+        <CssBaseline />
+        <Header>
+          <Route
+            path={['/', '/explore', '/bookmarks']}
+            exact
+            render={({ location }) => (
+              <Tabs value={location.pathname}>
+                <Tab label='Home' value='/' component={Link} to='/' sx={{ color: 'inherit' }} />
+                <Tab label='Explore' value='/explore' component={Link} to='/explore' sx={{ color: 'inherit' }} />
+                <Tab label='Bookmars' value='/bookmarks' component={Link} to='/bookmarks' sx={{ color: 'inherit' }} />
+              </Tabs>
+            )}
+          >
+          </Route>
+        </Header>
+        <Route path='/' exact>
+          <Home />
         </Route>
-        <Route path="/signin">
+        <Route path='/explore'>
+          pooopppee
+        </Route>
+        <Route path='/bookmarks'>
+          poop
+        </Route>
+        <Route path="/login">
           <SignIn />
         </Route>
-      </Router>
-    </div>
+      </div>
+    </Router>
   )
 }
 
