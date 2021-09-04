@@ -1,10 +1,11 @@
 import { Card, Container, Stack } from '@material-ui/core'
+import { useSelector } from 'react-redux'
 import React, { useEffect, useState } from 'react'
-import IsAuth from '../components/IsAuth'
 import api from '../core/api'
 
 const Home = () => {
   const [posts, setPosts] = useState([])
+  const authenticated = useSelector(state => state.auth.authenticated)
 
   useEffect(() => {
     api.get('posts')
@@ -21,11 +22,11 @@ const Home = () => {
         {/* Main Feed */}
         <Stack flexGrow='1' spacing={5}>
           {/* New Post */}
-          <IsAuth>
+          { authenticated && (
             <Card>
               New Post
             </Card>
-          </IsAuth>
+          )}
           {/* Feed */}
           { posts.map(post => (
             <Card key={post.id}>:)</Card>

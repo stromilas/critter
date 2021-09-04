@@ -1,4 +1,6 @@
-import React, { useContext } from 'react'
+import React from 'react'
+import { useDispatch } from 'react-redux'
+import authActions from '../store/auth'
 import {
   Container,
   Button,
@@ -10,25 +12,32 @@ import {
 } from '@material-ui/core'
 import { LockOutlined } from '@material-ui/icons'
 import { Link as RouteLink, useHistory } from 'react-router-dom'
-import AuthContext from '../context/auth-context'
 import api from '../core/api'
 
 const SignIn = () => {
-  const authContext = useContext(AuthContext)
   const history = useHistory()
+  const dispatch = useDispatch()
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const body = new FormData()
-    body.append('username', e.target.username.value)
-    body.append('password', e.target.password.value)
-    api
-      .post('auth/login', body, { 'Content-Type': 'multipart/form-data'})
-      .then(res => {
-        authContext.login(res.data.access_token)
-        history.push('/')
-      })
-      .catch((e) => console.error(e))
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    try {
+      const body = new FormData()
+      body.append('username', event.target.username.value)
+      body.append('password', event.target.password.value)
+      api.post('auth/login', body, { 'Content-Type': 'multipart/form-data'})
+        .then(res => {
+          dispatch(authActions.login({
+            token: res.data.token,
+            user: res.data.user
+          }))
+          history.push('/')
+        })
+        .catch(e => {
+          console.warn(e)
+        })
+    } catch (e) {
+      console.log(e.response);
+    }
   }
 
   return (

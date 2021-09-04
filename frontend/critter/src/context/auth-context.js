@@ -1,44 +1,57 @@
-import React, { useState } from 'react' 
-import api from '../core/api'
+// import React, { useReducer, useState } from 'react' 
+// import api from '../core/api'
 
-const AuthContext = React.createContext({
-  token: '',
-  authenticated: false,
-  login: (token) => { },
-  signout: () => {}
-})
+// const AuthContext = React.createContext({
+//   token: '',
+//   authenticated: false,
+//   user: null,
+//   login: (token) => { },
+//   signout: () => {}
+// })
 
-export const AuthContextProvider = (props) => {
-  const [token, setToken] = useState(localStorage.getItem('token'))
+// const reducer = (state, action) => {
+
+//   switch (action.type) {
+//     case
+//   }
+// }
+
+
+// export const AuthContextProvider = (props) => {
+
+
+//   const [state, dispatch] = useReducer()
+
+//   const [token, setToken] = useState(localStorage.getItem('token'))
+//   const [user, setUser] = useState()
+
+
+
+//   const authenticated = Boolean(token)
+
+//   const login = (token) => { 
+//     setToken(token)
+//     localStorage.setItem('token', token)
+//   }
+
+//   const signout = () => { 
+//     setToken(null) 
+//     localStorage.removeItem('token')
+//   }
   
-  api.interceptors.request.use(config => {
-    config.headers.Authorization = token ? `Bearer ${token}` : ''
-    return config
-  })
+//   const contextValue = {
+//     token: token,
+//     user: user,
+//     authenticated: authenticated,
+//     login: login,
+//     signout: signout
+//   }
 
-  const authenticated = Boolean(token)
+//   return (
+//     <AuthContext.Provider value={contextValue}>
+//       {props.children}
+//     </AuthContext.Provider>
+//   )
+// }
 
-  const login = (token) => { 
-    setToken(token)
-    localStorage.setItem('token', token)
-  }
-  const signout = () => { 
-    setToken(null) 
-    localStorage.removeItem('token')
-  }
-  
-  const contextValue = {
-    token: token,
-    authenticated: authenticated,
-    login: login,
-    signout: signout
-  }
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {props.children}
-    </AuthContext.Provider>
-  )
-}
-
-export default AuthContext
+// export default AuthContext

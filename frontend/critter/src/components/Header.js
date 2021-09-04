@@ -1,4 +1,8 @@
-import React, { useContext } from 'react'
+import React, { useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import authActions from '../store/auth'
+import Logo from '../components/Logo'
+import { Link, useHistory } from 'react-router-dom'
 import {
   AppBar,
   Box,
@@ -6,40 +10,109 @@ import {
   Typography,
   Button,
   Stack,
+  Avatar,
+  Menu,
+  IconButton,
+  MenuItem,
 } from '@material-ui/core'
-import AuthContext from '../context/auth-context'
-import Logo from '../components/Logo'
-import { Link } from 'react-router-dom'
+import { ArrowDropDownRounded } from '@material-ui/icons'
+
 
 const Header = ({ children }) => {
-  const authContext = useContext(AuthContext)
+  const authenticated = useSelector((state) => state.auth.authenticated)
+  const user = useSelector((state) => state.auth.user)
+  const [anchorEl, setAnchorEl] = useState(null)
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(authActions.logout())
+    handleClose()
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" >
-        <Toolbar variant="dense" sx={{ justifyContent: 'space-between', backgroundColor: 'white' }}>
+      <AppBar position="static">
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Logo */}
-          <Link to='/'>
-            <Stack direction='row' alignItems='center'>
+          <div onClick={() => history.push('/')}>
+            <Stack direction="row" alignItems="center">
               <Logo />
-              <Typography variant="span" component="div">
+              <Typography variant="h5" component="div" >
                 Critter
               </Typography>
             </Stack>
-          </Link>
+          </div>
 
           {/* Tabs */}
-          { children }
+          <Box sx={{ alignSelf: 'flex-end'}}>
+            {children}
+          </Box>
 
           {/* User Avatar | Login */}
-          { !authContext.authenticated ? (
-            <Link to='/login' >
-              Login
-            </Link>
+          {!authenticated ? (
+            <Link to="/login">Login</Link>
           ) : (
-            <Typography>
-              Welcome
-            </Typography>
+            <Stack direction="row" alignItems="center">
+              <Avatar
+                sx={{
+                  height: 30,
+                  width: 30,
+                  backgroundColor: 'primary.main',
+                  mr: 1,
+                  color: 'secondary.main',
+                }}
+                alt={user.name}
+                variant="rounded"
+              >
+                {user.name[0]}
+              </Avatar>
+              <Typography variant="h6" component="div">
+                {user.name}
+              </Typography>
+              <Box sx={{ mx: 1 }}>
+                <IconButton
+                  size='small'
+                  onClick={handleMenu}
+                  color='inherit'
+                  aria-label="User Settings"
+                  aria-controls='menu-appbar'
+                  aria-haspopup='true'
+                >
+                  <ArrowDropDownRounded sx={{ width: 32, height: 32 }} />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                >
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu>
+              </Box>
+              {/* <Button
+                variant="text"
+                onClick={() => dispatch(authActions.logout())}
+              >
+                Logout
+              </Button> */}
+            </Stack>
           )}
         </Toolbar>
       </AppBar>
