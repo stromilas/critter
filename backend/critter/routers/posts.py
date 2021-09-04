@@ -1,23 +1,39 @@
+from typing import Optional
 from critter.models import User, Post
+from critter.schemas.posts import Posts
 from critter.database import session
-from critter.common import authenticated
+from critter.common import auth, auth_optional
 from critter import schemas
-from fastapi.openapi.models import HTTPBase, Response
-from fastapi.param_functions import Body
+from fastapi.param_functions import Body, Query
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import joinedload
 
 # Configuration
 router = APIRouter(
-    prefix="/posts", tags=["chirps"], responses={404: {"detail": "Not found"}}
+    prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
 )
 
 
 @router.get("")
-async def get_posts(user: User = Depends(authenticated)):
+async def get_posts(
+    user: Optional[User] = Depends(auth_optional),
+    skip: Optional[int] = Query(0), 
+    limit: Optional[int] = Query(10)
+    ):
     try:
-        return {"posts": user.posts}
+        if user:
+            stmt = select(Post).options(joinedload(Post.user)).order_by(Post.created_at).limit(limit).offset(skip)
+            posts = session.execute(stmt).scalars().all()
+            posts = Posts(posts=posts)
+            return posts
+        else:
+            # TODO: Customise posts for logged in user
+            stmt = select(Post).options(joinedload(Post.user)).order_by(Post.created_at).limit(limit).offset(skip)
+            posts = session.execute(stmt).scalars().all()
+            posts = Posts(posts=posts)
+            return posts
 
     except HTTPException as exception:
         raise HTTPException(**exception.__dict__)
@@ -29,7 +45,7 @@ async def get_posts(user: User = Depends(authenticated)):
 
 @router.post("")
 async def create_post(
-    user: User = Depends(authenticated), post: schemas.Post = Body(..., embed=True)
+    user: User = Depends(auth), post: schemas.Post = Body(..., embed=True)
 ):
     try:
         user.posts.append(Post(**post.__dict__))
@@ -49,7 +65,7 @@ async def create_post(
 @router.post("/{id}/reply", status_code=201)
 async def create_reply(
     id: int,
-    user: User = Depends(authenticated),
+    user: User = Depends(auth),
     post: schemas.Post = Body(..., embed=True),
 ):
     try:

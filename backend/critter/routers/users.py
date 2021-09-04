@@ -1,7 +1,7 @@
 from typing import Optional
 from critter.models import User, Post
 from critter.database import session
-from critter.common import authenticated
+from critter.common import auth
 from critter import schemas
 from fastapi.param_functions import Query
 from sqlalchemy import select
@@ -32,7 +32,7 @@ async def get_posts(id: int):
         raise HTTPException(500)
 
 @router.get("/{id}/posts")
-async def get_posts(id: int, skip: Optional[int] = Query(0), limit: Optional[int] = Query(10) ):
+async def get_posts(id: int, skip: Optional[int] = Query(0), limit: Optional[int] = Query(10)):
     try:
         stmt = select(Post).where(Post.user_id==id).offset(skip).limit(limit)
         posts = session.execute(stmt).scalars().all()

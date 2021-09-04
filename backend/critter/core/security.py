@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 load_dotenv()
 
 # Establish token scheme
-token_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+token_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 # Configure JWT and password hashing 
 password_context = CryptContext(schemes=["bcrypt"])

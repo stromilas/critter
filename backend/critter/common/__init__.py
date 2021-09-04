@@ -1,1 +1,1 @@
-from .authenticated import authenticated
+from .auth import auth, auth_optional

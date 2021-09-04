@@ -1,9 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel
+from .base import BaseORM
 
-class PublicUser(BaseModel):
+class PublicUser(BaseORM):
     id: int
     username: str
     name: str
     location: Optional[str]
     website: Optional[str]
+

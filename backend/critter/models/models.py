@@ -30,7 +30,7 @@ class User(Base):
     website = Column(Text, nullable=True)
     location = Column(Text, nullable=True)
     password = Column(Text)
-    posts = relationship("Post", backref="user")
+    posts = relationship("Post", backref="user", lazy='dynamic')
     interactions = relationship("Interaction", backref="user")
     followers = relationship(
         "User",
