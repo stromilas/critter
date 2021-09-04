@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 from fastapi.param_functions import Form
@@ -11,6 +12,7 @@ class JWTContext(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = 'bearer'
+    expires: datetime
 
 
 class SignUpForm():

@@ -3,7 +3,8 @@ from critter.models import User, Post
 from critter.database import session
 from critter.common import auth
 from critter import schemas
-from fastapi.param_functions import Query
+from critter.schemas.users import PublicUser
+from fastapi.param_functions import Depends, Query
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, HTTPException
@@ -12,6 +13,15 @@ from fastapi import APIRouter, HTTPException
 router = APIRouter(
     prefix="/users", tags=["chirps"], responses={404: {"detail": "Not found"}}
 )
+
+@router.get("/me")
+async def get_self(user: User = Depends(auth)):
+    try:
+        user = PublicUser.from_orm(user)
+        return user
+    except Exception as e:
+        print(e)
+        raise HTTPException(500)
 
 @router.get("/{id}")
 async def get_posts(id: int):

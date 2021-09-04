@@ -4,6 +4,10 @@ from .base import BaseORM
 from pydantic import BaseModel
 from .users import PublicUser
 
+
+class InPost(BaseModel):
+    text: str
+    
 class Post(BaseORM):
     id: int
     text: str

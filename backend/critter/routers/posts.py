@@ -1,6 +1,5 @@
 from typing import Optional
 from critter.models import User, Post
-from critter.schemas.posts import Posts
 from critter.database import session
 from critter.common import auth, auth_optional
 from critter import schemas
@@ -8,7 +7,7 @@ from fastapi.param_functions import Body, Query
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import joinedload
+from starlette.responses import Response
 
 # Configuration
 router = APIRouter(
@@ -24,15 +23,15 @@ async def get_posts(
     ):
     try:
         if user:
-            stmt = select(Post).options(joinedload(Post.user)).order_by(Post.created_at).limit(limit).offset(skip)
+            stmt = select(Post).order_by(Post.created_at).limit(limit).offset(skip)
             posts = session.execute(stmt).scalars().all()
-            posts = Posts(posts=posts)
+            posts = schemas.Posts(posts=posts)
             return posts
         else:
             # TODO: Customise posts for logged in user
-            stmt = select(Post).options(joinedload(Post.user)).order_by(Post.created_at).limit(limit).offset(skip)
+            stmt = select(Post).order_by(Post.created_at).limit(limit).offset(skip)
             posts = session.execute(stmt).scalars().all()
-            posts = Posts(posts=posts)
+            posts = schemas.Posts(posts=posts)
             return posts
 
     except HTTPException as exception:
@@ -45,13 +44,13 @@ async def get_posts(
 
 @router.post("")
 async def create_post(
-    user: User = Depends(auth), post: schemas.Post = Body(..., embed=True)
+    user: User = Depends(auth), post: schemas.InPost = Body(..., embed=True)
 ):
     try:
-        user.posts.append(Post(**post.__dict__))
+        new_post = Post(**post.__dict__)
+        user.posts.append(new_post)
         session.commit()
-
-        return post
+        return Response(201)
 
     except HTTPException as exception:
         raise HTTPException(**exception.__dict__)
@@ -66,7 +65,7 @@ async def create_post(
 async def create_reply(
     id: int,
     user: User = Depends(auth),
-    post: schemas.Post = Body(..., embed=True),
+    post: schemas.InPost = Body(..., embed=True),
 ):
     try:
         reply = Post(**post.__dict__, user_id=user.id)

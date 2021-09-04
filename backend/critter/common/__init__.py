@@ -1,1 +1,4 @@
-from .auth import auth, auth_optional
+from .authentication import authenticate
+
+auth = authenticate()
+auth_optional = authenticate(required=False)

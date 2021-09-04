@@ -30,7 +30,7 @@ class User(Base):
     website = Column(Text, nullable=True)
     location = Column(Text, nullable=True)
     password = Column(Text)
-    posts = relationship("Post", backref="user", lazy='dynamic')
+    posts = relationship("Post", lazy='noload')
     interactions = relationship("Interaction", backref="user")
     followers = relationship(
         "User",
@@ -56,10 +56,11 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey("post.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship("User", back_populates='posts', lazy='joined')
     replies = relationship("Post", backref=backref("parent", remote_side=[id]))
     text = Column(String(280))
     created_at = Column(DateTime, default=func.now())
-    user_id = Column(Integer, ForeignKey("user.id"))
     interactions = relationship("Interaction", backref="post")
     media = relationship("Media")
     hashtags = relationship("Hashtag")

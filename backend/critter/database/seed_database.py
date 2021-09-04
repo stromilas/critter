@@ -9,18 +9,18 @@ session = Session(engine)
 
 userA = User(
     username="aaa",
-    name="AAA",
-    password="$2b$12$Ej5ko/wKXQ9XYKP9R2D7gePSb96LY15aR9yhWc3jgUSh4d14kkV3.",
+    name="Local Rat",
+    password="$2b$12$SNx3lApAQlhhOBdqiYaTAObOUdL/pOtU9YdlWGWUPwxIaMm7jHPxa",
 )
 userB = User(
     username="bbb",
-    name="BBB",
-    password="$2b$12$Ej5ko/wKXQ9XYKP9R2D7gePSb96LY15aR9yhWc3jgUSh4d14kkV3.",
+    name="Stray Dog",
+    password="$2b$12$SNx3lApAQlhhOBdqiYaTAObOUdL/pOtU9YdlWGWUPwxIaMm7jHPxa",
 )
 userC = User(
     username="ccc",
-    name="CCC",
-    password="$2b$12$Ej5ko/wKXQ9XYKP9R2D7gePSb96LY15aR9yhWc3jgUSh4d14kkV3.",
+    name="A tree",
+    password="$2b$12$SNx3lApAQlhhOBdqiYaTAObOUdL/pOtU9YdlWGWUPwxIaMm7jHPxa",
 )
 
 userA.followers.append(userB)
