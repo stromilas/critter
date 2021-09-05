@@ -2,18 +2,17 @@ from typing import Optional
 from critter.models import User, Post
 from critter.database import session
 from critter.common import auth, auth_optional
+from critter.core import error
 from critter import schemas
 from fastapi.param_functions import Body, Query
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
-from starlette.responses import Response
 
 # Configuration
 router = APIRouter(
     prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
 )
-
 
 @router.get("")
 async def get_posts(
@@ -34,29 +33,32 @@ async def get_posts(
             posts = schemas.Posts(posts=posts)
             return posts
 
-    except HTTPException as exception:
-        raise HTTPException(**exception.__dict__)
+    except HTTPException as e:
+        raise HTTPException(**e.__dict__)
 
     except Exception as e:
-        print(e)
+        error(e)
         raise HTTPException(500)
 
 
-@router.post("")
+@router.post("", status_code=201)
 async def create_post(
     user: User = Depends(auth), post: schemas.InPost = Body(..., embed=True)
 ):
     try:
+        print(user.__dict__)
+        print(post)
         new_post = Post(**post.__dict__)
+        print(new_post.__dict__)
         user.posts.append(new_post)
         session.commit()
-        return Response(201)
+        return
 
-    except HTTPException as exception:
-        raise HTTPException(**exception.__dict__)
+    except HTTPException as e:
+        raise HTTPException(**e.__dict__)
 
     except Exception as e:
-        print(e)
+        error(e)
         session.rollback()
         raise HTTPException(500)
 
@@ -75,16 +77,15 @@ async def create_reply(
         
         post.replies.append(reply)
         session.commit()
-
-        return {"detail": "Post created"}
+        return 
 
     except NoResultFound:
         raise HTTPException(404)
 
-    except HTTPException as exception:
-        raise HTTPException(**exception.__dict__)
+    except HTTPException as e:
+        raise HTTPException(**e.__dict__)
 
     except Exception as e:
-        print(e)
+        error(e)
         session.rollback()
         raise HTTPException(500)
