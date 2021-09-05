@@ -39,14 +39,14 @@ const Header = ({ children }) => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+    <Box sx={{ flexGrow: 1 }} >
+      <AppBar position="static" elevation={1}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Logo */}
           <div onClick={() => history.push('/')}>
             <Stack direction="row" alignItems="center">
               <Logo />
-              <Typography variant="h5" component="div" >
+              <Typography variant="h6" component="div" color='text.primary' fontWeight='600'>
                 Critter
               </Typography>
             </Stack>
@@ -64,18 +64,15 @@ const Header = ({ children }) => {
             <Stack direction="row" alignItems="center">
               <Avatar
                 sx={{
-                  height: 30,
-                  width: 30,
                   backgroundColor: 'primary.main',
                   mr: 1,
-                  color: 'secondary.main',
                 }}
                 alt={user.name}
-                variant="rounded"
+                variant="rounded-s"
               >
                 {user.name[0]}
               </Avatar>
-              <Typography variant="h6" component="div">
+              <Typography variant="body1" component="div" fontWeight='bold' sx={{ color: 'text.primary' }}>
                 {user.name}
               </Typography>
               <Box sx={{ mx: 1 }}>
@@ -97,7 +94,7 @@ const Header = ({ children }) => {
                     horizontal: 'right',
                   }}
                   anchorOrigin={{
-                    vertical: 'top',
+                    vertical: 'center',
                     horizontal: 'right',
                   }}
                   open={Boolean(anchorEl)}
@@ -106,12 +103,6 @@ const Header = ({ children }) => {
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
               </Box>
-              {/* <Button
-                variant="text"
-                onClick={() => dispatch(authActions.logout())}
-              >
-                Logout
-              </Button> */}
             </Stack>
           )}
         </Toolbar>
