@@ -1,19 +1,27 @@
 from datetime import datetime
 from typing import List, Optional
-from .base import BaseORM
-from pydantic import BaseModel
-from .users import PublicUser
+from .base import CoreModel
 
 
-class InPost(BaseModel):
+class InPost(CoreModel):
     text: str
-    
-class Post(BaseORM):
+
+class OutPost(CoreModel):
     id: int
+    user_id: int
     text: str
+    name: str
+    username: str
+    shares: int
+    likes: int
+    liked: bool = False
+    shared: bool = False
     created_at: datetime
-    user: Optional[PublicUser]
+    
 
-class Posts(BaseModel):
-    posts: List[Post]
+class OutPosts(CoreModel):
+    posts: List[OutPost]
+
+class InInteract(CoreModel):
+    set: bool
 
