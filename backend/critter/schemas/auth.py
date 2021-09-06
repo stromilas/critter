@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from .base import CoreModel
 from fastapi.param_functions import Form
 
-class JWTContext(BaseModel):
+class JWTContext(CoreModel):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: Optional[int] = 60
 
 
-class Token(BaseModel):
+class Token(CoreModel):
     access_token: str
     token_type: str = 'bearer'
     expires: datetime

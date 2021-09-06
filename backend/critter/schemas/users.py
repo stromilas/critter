@@ -1,7 +1,7 @@
 from typing import Optional
-from .base import BaseORM
+from .base import CoreModel
 
-class PublicUser(BaseORM):
+class PublicUser(CoreModel):
     id: int
     username: str
     name: str
