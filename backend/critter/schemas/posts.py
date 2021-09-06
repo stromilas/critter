@@ -1,7 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
+from sqlalchemy.sql.sqltypes import Enum
 from .base import CoreModel
 
+class InteractType(str, Enum):
+    like = "like"
+    share = "share"
 
 class InPost(CoreModel):
     text: str

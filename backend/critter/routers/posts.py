@@ -18,7 +18,6 @@ router = APIRouter(
     prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
 )
 
-
 @router.get("")
 async def get_posts(
     user: Optional[User] = Depends(auth_optional),
@@ -48,16 +47,34 @@ async def get_posts(
                         else_=0,
                     ),
                 ).label("shares"),
+                func.max(
+                    case(
+                        [
+                            (and_(Interaction.type == "like", Interaction.user_id == user.id), 1),
+                        ],
+                        else_=0,
+                    ),
+                ).label("liked") if user is not None else None,
+                func.max(
+                    case(
+                        [
+                            (and_(Interaction.type == "share", Interaction.user_id == user.id), 1),
+                        ],
+                        else_=0,
+                    ),
+                ).label("shared") if user is not None else None,
             )
             .join(Interaction, Post.interactions, isouter=True)
             .group_by(Post.id)
-            .limit(limit)
-            .offset(skip)
             .subquery()
         )
 
-        stmt = select(User.name, User.username, subquery).join(
-            subquery, subquery.c.user_id == User.id
+        stmt = (
+            select(User.name, User.username, subquery)
+            .join(subquery, subquery.c.user_id == User.id)
+            .order_by(desc(subquery.c.created_at))
+            .limit(limit)
+            .offset(skip)
         )
 
         result = session.execute(stmt)
@@ -123,34 +140,37 @@ async def create_reply(
         raise HTTPException(500)
 
 
-@router.post("/{id}/like", status_code=201)
+@router.post("/{id}/{type}", status_code=201)
 async def interact_like(
-    id: int, like: schemas.InInteract = Body(...), user: User = Depends(auth)
+    id: int, 
+    type: schemas.InteractType,
+    body: schemas.InInteract = Body(...), user: User = Depends(auth)
 ):
     """
-    Note: user can like his own post
+    Note: user can like/share his own post
     """
+
     try:
-        # Has user already liked the post
+        # Find existing interaction
         stmt = select(Interaction).filter(
             and_(
-                Interaction.type == "like",
+                Interaction.type == type,
                 and_(Interaction.user_id == user.id, Interaction.post_id == id),
             )
         )
         interaction = session.execute(stmt).scalar()
 
-        # User has pressed like
-        if like.set:
-            # Like must not exist
+        # User is adding interaction
+        if body.set:
+            # Must not exist
             if interaction is None:
-                interaction = Interaction(user=user, post_id=id, type="like")
+                interaction = Interaction(user=user, post_id=id, type=type)
                 session.add(interaction)
                 session.commit()
 
-        # User has pressed un-like
+        # User is removing interaction
         else:
-            # Like must exist
+            # Must exist
             if interaction is not None:
                 session.delete(interaction)
                 session.commit()
