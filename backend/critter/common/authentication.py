@@ -1,11 +1,12 @@
 from datetime import datetime
+from logging import error
 from typing import Optional
 from critter.database import session
 from critter.models.models import User
 from critter.core.security import token_scheme
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
-from jose import jwt
+from jose import jwt, JWTError
 from sqlalchemy import select
 from critter.core.security import jwt_context
 
@@ -43,8 +44,12 @@ def authenticate(required: bool = True) -> User:
         except HTTPException as e:
             raise HTTPException(**e.__dict__)
 
+        except JWTError as e:
+            error(e)
+            raise HTTPException(401, detail='Malformed authentication token')
+
         except Exception as e:
-            print(e)
+            error(e)
             raise HTTPException(500)
 
     return _auth

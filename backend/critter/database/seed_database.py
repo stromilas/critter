@@ -26,8 +26,19 @@ userC = User(
 userA.followers.append(userB)
 userA.followers.append(userC)
 userA.posts.append(
-    Post(text="My first post :)", interactions=[Interaction(user=userB, type="like")])
+    Post(text="My first post :)", interactions=[
+        Interaction(user=userB, type="like"),
+        Interaction(user=userB, type="share"),
+        Interaction(user=userB, type="like"),
+        Interaction(user=userC, type="like"),
+        Interaction(user=userC, type="share"),
+        Interaction(user=userA, type="like"),
+    ])
 )
+userC.posts.append(
+    Post(text="Wooooo :o")
+)
+
 
 session.add_all([userA, userC, userB])
 session.commit()
