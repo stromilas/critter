@@ -6,17 +6,10 @@ import themeOptions from './theme/main'
 import Header from './components/Header'
 import Home from './pages/Home'
 import SignIn from './pages/SignIn'
-import { useSelector } from 'react-redux'
-import api from './core/api'
+
 
 const App = () => {
   const theme = createTheme(themeOptions)
-  const token = useSelector((state) => state.auth.token?.access_token)
-
-  api.interceptors.request.use((config) => {
-    config.headers.Authorization = token ? `Bearer ${token}` : ''
-    return config
-  })
 
   return (
     <ThemeProvider theme={theme}>

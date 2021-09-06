@@ -8,7 +8,6 @@ import {
   Box,
   Toolbar,
   Typography,
-  Button,
   Stack,
   Avatar,
   Menu,
@@ -41,10 +40,10 @@ const Header = ({ children }) => {
   return (
     <Box sx={{ flexGrow: 1 }} >
       <AppBar position="static" elevation={1}>
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Toolbar sx={{ justifyContent: 'space-between', backgroundColor: 'background.paper' }} >
           {/* Logo */}
           <div onClick={() => history.push('/')}>
-            <Stack direction="row" alignItems="center">
+            <Stack direction="row" alignItems="center" sx={{cursor: 'pointer'}}>
               <Logo />
               <Typography variant="h6" component="div" color='text.primary' fontWeight='600'>
                 Critter
@@ -72,7 +71,7 @@ const Header = ({ children }) => {
               >
                 {user.name[0]}
               </Avatar>
-              <Typography variant="body1" component="div" fontWeight='bold' sx={{ color: 'text.primary' }}>
+              <Typography variant="body1" component="div" fontWeight='bold' sx={{ color: 'text.primary', cursor: 'default' }}>
                 {user.name}
               </Typography>
               <Box sx={{ mx: 1 }}>
