@@ -31,7 +31,7 @@ class User(Base):
     location = Column(Text, nullable=True)
     password = Column(Text)
     posts = relationship("Post", lazy='noload', back_populates='user')
-    interactions = relationship("Interaction", backref="user")
+    interactions = relationship("Interaction", lazy='noload', back_populates='user')
     followers = relationship(
         "User",
         secondary=follower,
@@ -47,8 +47,10 @@ class Interaction(Base):
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, default=func.now())
     user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship('User', back_populates='interactions', lazy='noload')
     post_id = Column(Integer, ForeignKey("post.id"))
-    type = Column(Enum("like", "retweet", "mention", name="interaction_type"))
+    post = relationship('Post', back_populates='interactions', lazy='noload')
+    type = Column(Enum("like", "share", "mention", name="interaction_type"))
 
 
 class Post(Base):
@@ -61,7 +63,7 @@ class Post(Base):
     replies = relationship("Post", backref=backref("parent", remote_side=[id]))
     text = Column(String(280))
     created_at = Column(DateTime, default=func.now())
-    interactions = relationship("Interaction", backref="post")
+    interactions = relationship("Interaction", back_populates="post")
     media = relationship("Media")
     hashtags = relationship("Hashtag")
 
