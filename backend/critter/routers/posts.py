@@ -18,11 +18,13 @@ router = APIRouter(
     prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
 )
 
+
 @router.get("")
 async def get_posts(
     user: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
+    parent_id: Optional[int] = None
 ):
     try:
         subquery = (
@@ -50,21 +52,38 @@ async def get_posts(
                 func.max(
                     case(
                         [
-                            (and_(Interaction.type == "like", Interaction.user_id == user.id), 1),
+                            (
+                                and_(
+                                    Interaction.type == "like",
+                                    Interaction.user_id == user.id,
+                                ),
+                                1,
+                            ),
                         ],
                         else_=0,
                     ),
-                ).label("liked") if user is not None else None,
+                ).label("liked")
+                if user is not None
+                else None,
                 func.max(
                     case(
                         [
-                            (and_(Interaction.type == "share", Interaction.user_id == user.id), 1),
+                            (
+                                and_(
+                                    Interaction.type == "share",
+                                    Interaction.user_id == user.id,
+                                ),
+                                1,
+                            ),
                         ],
                         else_=0,
                     ),
-                ).label("shared") if user is not None else None,
+                ).label("shared")
+                if user is not None
+                else None,
             )
             .join(Interaction, Post.interactions, isouter=True)
+            .filter(Post.parent_id == parent_id if parent_id is not None else True) 
             .group_by(Post.id)
             .subquery()
         )
@@ -112,7 +131,7 @@ async def create_post(
         raise HTTPException(500)
 
 
-@router.post("/{id}/reply", status_code=201)
+@router.post("/{id}/replies", status_code=201)
 async def create_reply(
     id: int,
     user: User = Depends(auth),
@@ -140,15 +159,15 @@ async def create_reply(
         raise HTTPException(500)
 
 
+
 @router.post("/{id}/{type}", status_code=201)
 async def interact_like(
-    id: int, 
+    id: int,
     type: schemas.InteractType,
-    body: schemas.InInteract = Body(...), user: User = Depends(auth)
+    body: schemas.InInteract = Body(...),
+    user: User = Depends(auth),
 ):
-    """
-    Note: user can like/share his own post
-    """
+    """Note: user can like/share his own post"""
 
     try:
         # Find existing interaction

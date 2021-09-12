@@ -12,7 +12,7 @@ import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
 import api from '../core/api'
 
-const Post = (props) => {
+const Post = ({ sx, ...props }) => {
   const [liked, setLiked] = useState(props.liked)
   const [shared, setShared] = useState(props.shared)
   const history = useHistory()
@@ -24,7 +24,6 @@ const Post = (props) => {
     api.post(`posts/${props.id}/like`, { set: liking }).catch((e) => {
       console.error(e)
       setLiked(!liking)
-
     })
   }
 
@@ -38,9 +37,17 @@ const Post = (props) => {
     })
   }
 
+  const goToPostPage = (e) => {
+    history.push(`/posts/${props.id}/`, {
+      post: {
+        ...props
+      }
+    })
+  }
+
   const date = new Date(props.created_at).toDateString()
   return (
-    <Card onClick={() => history.push(`/posts/${props.id}/`)} sx={{ cursor: 'pointer' }}>
+    <Card onClick={goToPostPage} sx={{ cursor: 'pointer', ...sx }}>
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}>
           {props.name[0]}
