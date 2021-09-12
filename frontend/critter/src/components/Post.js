@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import {
   Avatar,
   Card,
@@ -14,17 +15,21 @@ import api from '../core/api'
 const Post = (props) => {
   const [liked, setLiked] = useState(props.liked)
   const [shared, setShared] = useState(props.shared)
-
-  const handleLike = () => {
+  const history = useHistory()
+  
+  const handleLike = (e) => {
+    e.stopPropagation()
     const liking = !liked
     setLiked(liking)
     api.post(`posts/${props.id}/like`, { set: liking }).catch((e) => {
       console.error(e)
       setLiked(!liking)
+
     })
   }
 
-  const handleShare = () => {
+  const handleShare = (e) => {
+    e.stopPropagation()
     const sharing = !shared
     setShared(sharing)
     api.post(`posts/${props.id}/share`, { set: sharing }).catch((e) => {
@@ -35,15 +40,20 @@ const Post = (props) => {
 
   const date = new Date(props.created_at).toDateString()
   return (
-    <Card>
+    <Card onClick={() => history.push(`/posts/${props.id}/`)} sx={{ cursor: 'pointer' }}>
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}>
           {props.name[0]}
         </Avatar>
         <Stack justifyContent="center">
-          <Typography color="text.primary" fontWeight="600">
-            {props.name}
-          </Typography>
+          <Stack direction="row" gap="3px" alignItems="center">
+            <Typography color="text.primary" fontWeight="600">
+              {props.name}
+            </Typography>
+            <Typography variant="caption" color='text.hint'>
+              {"@"}{props.username}
+            </Typography>
+          </Stack>
           <Typography color="text.hint" variant="caption">
             {date}
           </Typography>
