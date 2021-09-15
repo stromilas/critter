@@ -10,24 +10,24 @@ import { Box } from '@material-ui/system'
 const PostPage = () => {
   const { id } = useParams()
   const [parents, setParents] = useState([])
-  const [post, setPost] = useState(useLocation().state?.post)
+  const [post, setPost] = useState()
   const [replies, setReplies] = useState([])
+  const [trigger, setTrigger] = useState(false)
   const authenticated = useSelector((state) => state.auth.authenticated)
 
   // Get post if doesn't exist
   useEffect(() => {
-    if (!post) {
-      api
-        .get(`posts/${id}`)
-        .then((res) => {
-          setPost(res.post)
-        })
-        .catch((e) => {
-          console.error(e)
-          // TODO: Show notification
-        })
-    }
-  }, [post])
+    api
+      .get(`posts/${id}`)
+      .then((res) => {
+        setPost(res.data.post)
+      })
+      .catch((e) => {
+        console.error(e)
+        // TODO: Show notification
+      })
+
+  }, [id])
 
   // Get parent chain
   useEffect(() => {
@@ -52,26 +52,38 @@ const PostPage = () => {
       .catch((e) => {
         console.error(e)
       })
-  }, [id])
+  }, [id, trigger])
 
-  const date = new Date(post.created_at).toDateString()
+  const handleSubmit = (text) => {
+    const data = { post: { text } }
+    api
+      .post(`posts/${id}/replies`, data)
+      .then((res) => {
+        setTrigger(!trigger)
+      })
+      .catch((e) => {
+        console.error(e)
+      })
+  }
 
   return (
     <Container maxWidth="sm" sx={{ mt: 3 }}>
-
       {/* Parent chain */}
       {parents?.map((post) => (
-        <Post key={post.id} post={post} variant='compact' sx={{ my: 3 }} />
+        <Post key={post.id} post={post} variant="compact" sx={{ my: 3 }} />
       ))}
 
-      <Post key={post.id} post={post} />
-      
-      {authenticated && (
-        <Reply sx={{mt: 1}}/>
+      {/* Main post */}
+      {post && (
+        <Post key={post.id} post={post} />
       )}
+
+      {/* Allow to reply if authenticated */}
+      {authenticated && <Reply sx={{ mt: 1 }} onSubmit={handleSubmit} />}
+
       {/* Direct replies */}
       {replies?.map((post) => (
-        <Post key={post.id} post={post} variant='compact' sx={{ my: 3 }} />
+        <Post key={post.id} post={post} variant="compact" sx={{ my: 3 }} />
       ))}
     </Container>
   )

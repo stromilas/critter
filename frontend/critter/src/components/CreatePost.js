@@ -8,6 +8,7 @@ const CreatePost = (props) => {
 
   const handleSubmit = () => {
     props.onSubmit(text)
+    setText('')
   }
 
   return (
@@ -31,6 +32,7 @@ const CreatePost = (props) => {
           multiline
           rows={3}
           placeholder="Share your thoughts"
+          value={text}
           onChange={(e) => setText(e.target.value)}
         />
       </Stack>

@@ -1,29 +1,20 @@
 import React, { useState } from 'react'
-import { useHistory } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import {
   Avatar,
   Card,
-  Divider,
-  IconButton,
   Stack,
-  Typography,
-  Link,
   TextField,
   Button
 } from '@material-ui/core'
-import { Box } from '@material-ui/system'
-import { Favorite, Loop } from '@material-ui/icons'
-import Interactions from './Interactions'
-import api from '../core/api'
 
 const Reply = ({ sx, ...props }) => {
-  const history = useHistory()
   const [text, setText] = useState('')
   const user = useSelector(state => state.auth?.user)
 
-  const handleSubmit = e => {
-
+  const handleSubmit = () => {
+    props.onSubmit(text)
+    setText('')
   }
 
   return (
@@ -45,6 +36,7 @@ const Reply = ({ sx, ...props }) => {
           multiline
           rows={2}
           placeholder="Reply"
+          value={text}
           onChange={(e) => setText(e.target.value)}
         />
         <Button variant='text' onClick={handleSubmit}>

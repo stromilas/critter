@@ -45,7 +45,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
   }
 
   const goToPostPage = (e) => {
-    history.push(`/posts/${post.id}/`, { post })
+    history.push(`/posts/${post.id}/`)
   }
 
   const date = new Date(post.created_at).toDateString()
