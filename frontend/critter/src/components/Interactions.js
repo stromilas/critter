@@ -12,6 +12,7 @@ import {
 import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
 import api from '../core/api'
+import { useSelector } from 'react-redux'
 
 
 export const Interactions = ({ variant = 'normal', ...props }) => {
@@ -27,15 +28,22 @@ export const Interactions = ({ variant = 'normal', ...props }) => {
 export const Normal = (props) => {
   const [likes, setLikes] = useState(props.likes)
   const [shares, setShares] = useState(props.shares)
+  const authenticated = useSelector((state) => state.auth.authenticated)
 
   const updateShares = (e, digit) => {
-    setShares(shares + digit)
-    props.handleShare(e)
+    e.stopPropagation()
+    if (authenticated) {
+      props.handleShare(e)
+      setShares(shares + digit)
+    }
   }
 
   const updateLikes = (e, digit) => {
-    setLikes(shares + digit)
-    props.handleLike(e)
+    e.stopPropagation()
+    if (authenticated) {
+      props.handleLike(e)
+      setLikes(shares + digit)
+    }
   }
   
   return (
