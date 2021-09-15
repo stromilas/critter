@@ -33,16 +33,16 @@ export const Normal = (props) => {
   const updateShares = (e, digit) => {
     e.stopPropagation()
     if (authenticated) {
-      props.handleShare(e)
       setShares(shares + digit)
+      props.handleShare(e)
     }
   }
 
   const updateLikes = (e, digit) => {
     e.stopPropagation()
     if (authenticated) {
+      setLikes(likes + digit)
       props.handleLike(e)
-      setLikes(shares + digit)
     }
   }
   
@@ -64,7 +64,7 @@ export const Normal = (props) => {
         <IconButton onClick={(e) => updateShares(e, props.shared ? -1 : 1)} edge="start">
           <Loop sx={{ color: props.shared ? 'primary.main' : 'text.hint' }} />
         </IconButton>
-        <IconButton onClick={(e) => updateLikes(e, props.likes ? -1 : 1)}>
+        <IconButton onClick={(e) => updateLikes(e, props.liked ? -1 : 1)}>
           <Favorite sx={{ color: props.liked ? 'primary.main' : 'text.hint' }} />
         </IconButton>
       </Stack>
@@ -75,15 +75,22 @@ export const Normal = (props) => {
 export const Compact = (props) => {
   const [likes, setLikes] = useState(props.likes)
   const [shares, setShares] = useState(props.shares)
+  const authenticated = useSelector((state) => state.auth.authenticated)
 
   const updateShares = (e, digit) => {
-    setShares(shares + digit)
-    props.handleShare(e)
+    e.stopPropagation()
+    if (authenticated) {
+      setShares(shares + digit)
+      props.handleShare(e)
+    }
   }
 
   const updateLikes = (e, digit) => {
-    setLikes(shares + digit)
-    props.handleLike(e)
+    e.stopPropagation()
+    if (authenticated) {
+      setLikes(likes + digit)
+      props.handleLike(e)
+    }
   }
 
 
@@ -100,7 +107,7 @@ export const Compact = (props) => {
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center">
-          <IconButton onClick={(e) => updateLikes(e, props.likes ? -1 : 1)}>
+          <IconButton onClick={(e) => updateLikes(e, props.liked ? -1 : 1)}>
             <Favorite sx={{ color: props.liked ? 'primary.main' : 'text.hint', height: 20, width: 20  }} />
           </IconButton>
           <Typography variant="caption">
