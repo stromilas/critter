@@ -27,7 +27,7 @@ async def get_posts(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = posts_subquery(user_id=user.id, skip=skip, limit=limit)
+        subquery = posts_subquery(user_id=user.id if user else None, skip=skip, limit=limit)
 
         stmt = (
             select(Post, subquery)
@@ -51,7 +51,7 @@ async def get_posts(
 @router.get("/{id}")
 async def get_post(id: int, user: Optional[User] = Depends(auth_optional)):
     try:
-        subquery = posts_subquery(user_id=user.id, ids=[id])
+        subquery = posts_subquery(user_id=user.id if user else None, ids=[id])
 
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
@@ -102,7 +102,7 @@ async def get_parents(
 
         # Get parent post chain
         subquery = posts_subquery(
-            user_id=user.id, ids=parent_ids, skip=skip, limit=limit
+            user_id=user.id if user else None, ids=parent_ids, skip=skip, limit=limit
         )
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
@@ -127,7 +127,7 @@ async def get_replies(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = posts_subquery(user_id=user.id, parent_id=id, skip=skip, limit=limit)
+        subquery = posts_subquery(user_id=user.id if user else None, parent_id=id, skip=skip, limit=limit)
 
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
@@ -238,7 +238,7 @@ def parse_posts(results):
         p = post[0].__dict__
         p["likes"] = post.likes
         p["shares"] = post.shares
-        p["liked"] = post.liked
+        p["liked"] = post.liked 
         p["shared"] = post.shared
         posts.append(schemas.OutPost(**p))
     return posts
@@ -276,23 +276,21 @@ def posts_subquery(
                         (
                             and_(
                                 Interaction.type == "like",
-                                Interaction.user_id == user_id,
+                                (Interaction.user_id == user_id) if user_id else False,
                             ),
                             1,
                         ),
                     ],
                     else_=0,
                 ),
-            ).label("liked")
-            if user_id is not None
-            else None,
+            ).label("liked"),
             func.max(
                 case(
                     [
                         (
                             and_(
                                 Interaction.type == "share",
-                                Interaction.user_id == user_id,
+                                (Interaction.user_id == user_id) if user_id else False,
                             ),
                             1,
                         ),
@@ -300,8 +298,7 @@ def posts_subquery(
                     else_=0,
                 ),
             ).label("shared")
-            if user_id is not None
-            else None,
+
         )
         .join(Interaction, Post.interactions, isouter=True)
         .filter(Post.parent_id == parent_id if parent_id is not None else True)
