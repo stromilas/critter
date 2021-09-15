@@ -76,25 +76,29 @@ async def get_parents(
     limit: Optional[int] = Query(10),
 ):
     try:
-        # Traverse parent posts and get IDs
+        stmt = select(Post).filter_by(id=id)
+        post = session.execute(stmt).scalar()
+
+        # If current post is the root
+        if (post.parent_id is None):
+            return {"posts": []}
+
+        # Get initial parent
         hierarchy = (
-            select(Post.id)
-            .filter(and_(Post.parent_id == None, Post.id != id))
+            select(Post.id, Post.parent_id)
+            .filter(Post.id == post.parent_id)
             .cte(name="hierarchy", recursive=True)
         )
 
+        # Get initial parent's parent
+        # and recurse using latest parent
         stmt = hierarchy.union_all(
-            select(Post.id).filter(
-                and_(Post.parent_id == hierarchy.c.id, Post.id != id)
-            )
+            select(Post.id, Post.parent_id)
+            .filter(Post.id == hierarchy.c.parent_id)
         )
 
         results = session.execute(select(stmt)).all()
         parent_ids = [x[0] for x in results]
-
-        # If current post is the root
-        if len(parent_ids) < 1:
-            return {"posts": []}
 
         # Get parent post chain
         subquery = posts_subquery(
