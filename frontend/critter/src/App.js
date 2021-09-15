@@ -8,7 +8,7 @@ import Home from './pages/Home'
 import SignIn from './pages/SignIn'
 import PostPage from './pages/PostPage'
 import api from './core/api'
-import { useSelector } from 'react-redux'
+import UserPage from './pages/UserPage'
 
 const App = () => {
   const theme = createTheme(themeOptions)
@@ -16,8 +16,6 @@ const App = () => {
 
   api.interceptors.request.use((config) => {
     const token = JSON.parse(localStorage.getItem('authState'))?.token?.access_token
-    console.log(localStorage.getItem('authState'));
-    console.log(token);
     config.headers.Authorization = token ? `Bearer ${token}` : ''
     return config
   })
@@ -65,6 +63,9 @@ const App = () => {
           </Header>
           <Route path="/" exact>
             <Home />
+          </Route>
+          <Route path="/users/:id" exact>
+            <UserPage />
           </Route>
           <Route path="/posts/:id">
             <PostPage />

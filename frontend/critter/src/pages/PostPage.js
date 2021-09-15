@@ -43,16 +43,16 @@ const PostPage = () => {
       <Card>
         <Stack direction="row">
           <Avatar variant="rounded-m" sx={{ mr: 2 }}>
-            {post.name[0]}
+            {post.user.name[0]}
           </Avatar>
           <Stack justifyContent="center">
             <Stack direction="row" gap="3px" alignItems="center">
               <Typography color="text.primary" fontWeight="600">
-                {post.name}
+                {post.user.name}
               </Typography>
               <Typography variant="caption" color="text.hint">
                 {'@'}
-                {post.username}
+                {post.user.username}
               </Typography>
             </Stack>
             <Typography color="text.hint" variant="caption">

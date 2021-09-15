@@ -42,7 +42,7 @@ const Home = () => {
         <Stack flexGrow="1" spacing={5}>
           {authenticated && <CreatePost onSubmit={submitPost} />}
           {posts.map((post) => (
-            <Post key={post.id} {...post} />
+            <Post key={post.id} post={post} />
           ))}
         </Stack>
 

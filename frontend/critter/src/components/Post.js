@@ -7,21 +7,22 @@ import {
   IconButton,
   Stack,
   Typography,
+  Link
 } from '@material-ui/core'
 import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
 import api from '../core/api'
 
-const Post = ({ sx, ...props }) => {
-  const [liked, setLiked] = useState(props.liked)
-  const [shared, setShared] = useState(props.shared)
+const Post = ({ sx, post }) => {
+  const [liked, setLiked] = useState(post.liked)
+  const [shared, setShared] = useState(post.shared)
   const history = useHistory()
-  
+
   const handleLike = (e) => {
     e.stopPropagation()
     const liking = !liked
     setLiked(liking)
-    api.post(`posts/${props.id}/like`, { set: liking }).catch((e) => {
+    api.post(`posts/${post.id}/like`, { set: liking }).catch((e) => {
       console.error(e)
       setLiked(!liking)
     })
@@ -31,34 +32,36 @@ const Post = ({ sx, ...props }) => {
     e.stopPropagation()
     const sharing = !shared
     setShared(sharing)
-    api.post(`posts/${props.id}/share`, { set: sharing }).catch((e) => {
+    api.post(`posts/${post.id}/share`, { set: sharing }).catch((e) => {
       console.error(e)
       setShared(!sharing)
     })
   }
 
-  const goToPostPage = (e) => {
-    history.push(`/posts/${props.id}/`, {
-      post: {
-        ...props
-      }
-    })
+  const goToUserPage = (e, username) => {
+    e.stopPropagation()
+    history.push(`users/${username}`)
   }
 
-  const date = new Date(props.created_at).toDateString()
+  const goToPostPage = (e) => {
+    history.push(`/posts/${post.id}/`, { post })
+  }
+
+  const date = new Date(post.created_at).toDateString()
   return (
     <Card onClick={goToPostPage} sx={{ cursor: 'pointer', ...sx }}>
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}>
-          {props.name[0]}
+          {post.user.name[0]}
         </Avatar>
         <Stack justifyContent="center">
           <Stack direction="row" gap="3px" alignItems="center">
             <Typography color="text.primary" fontWeight="600">
-              {props.name}
+              {post.user.name}
             </Typography>
-            <Typography variant="caption" color='text.hint'>
-              {"@"}{props.username}
+            <Typography variant="caption" color="text.hint">
+              {'@'}
+              {post.user.username}
             </Typography>
           </Stack>
           <Typography color="text.hint" variant="caption">
@@ -66,19 +69,31 @@ const Post = ({ sx, ...props }) => {
           </Typography>
         </Stack>
       </Stack>
+      {post.parent && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption">
+            Replying to {" "}
+            <Link onClick={(e) => goToUserPage(e, post.parent.user.username)}>
+              @{post.parent.user.username}
+            </Link>
+          </Typography>
+        </Box>
+      )}
       {/* Text */}
       <Box sx={{ my: 3 }}>
-        <Typography>{props.text}</Typography>
+        <Typography>{post.text}</Typography>
       </Box>
+      {/* Likes & Shares */}
       <Divider sx={{ my: 1 }} />
       <Typography variant="subtitle1">
         <Stack direction="row" gap="6px">
-          <Typography fontWeight="600">{props.shares}</Typography>
+          <Typography fontWeight="600">{post.shares}</Typography>
           <Typography>shares</Typography>
-          <Typography fontWeight="600">{props.likes}</Typography>
+          <Typography fontWeight="600">{post.likes}</Typography>
           <Typography>likes</Typography>
         </Stack>
       </Typography>
+      {/* Share or Like */}
       <Divider sx={{ my: 1 }} />
       <Stack direction="row">
         <IconButton onClick={handleShare} edge="start">
