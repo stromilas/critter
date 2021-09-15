@@ -64,7 +64,7 @@ export const Normal = (props) => {
         <IconButton onClick={(e) => updateShares(e, props.shared ? -1 : 1)} edge="start">
           <Loop sx={{ color: props.shared ? 'primary.main' : 'text.hint' }} />
         </IconButton>
-        <IconButton onClick={(e) => updateLikes(e, props.shared ? -1 : 1)}>
+        <IconButton onClick={(e) => updateLikes(e, props.likes ? -1 : 1)}>
           <Favorite sx={{ color: props.liked ? 'primary.main' : 'text.hint' }} />
         </IconButton>
       </Stack>
@@ -100,7 +100,7 @@ export const Compact = (props) => {
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center">
-          <IconButton onClick={(e) => updateLikes(e, props.shared ? -1 : 1)}>
+          <IconButton onClick={(e) => updateLikes(e, props.likes ? -1 : 1)}>
             <Favorite sx={{ color: props.liked ? 'primary.main' : 'text.hint', height: 20, width: 20  }} />
           </IconButton>
           <Typography variant="caption">
