@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router'
+import { useSelector } from 'react-redux'
 import { Avatar, Card, Container, Stack, Typography } from '@material-ui/core'
 import Post from '../components/Post'
+import Reply from '../components/Reply'
 import api from '../core/api'
 import { Box } from '@material-ui/system'
 
 const PostPage = () => {
   const { id } = useParams()
+  const [parents, setParents] = useState([])
   const [post, setPost] = useState(useLocation().state?.post)
   const [replies, setReplies] = useState([])
+  const authenticated = useSelector((state) => state.auth.authenticated)
 
+  // Get post if doesn't exist
   useEffect(() => {
     if (!post) {
       api
@@ -24,11 +29,24 @@ const PostPage = () => {
     }
   }, [post])
 
+  // Get parent chain
   useEffect(() => {
     api
-      .get(`posts`, { params: { parent_id: id } })
+      .get(`posts/${id}/parents`)
       .then((res) => {
-        console.log(res);
+        setParents(res.data.posts)
+      })
+      .catch((e) => {
+        console.error(e)
+      })
+  }, [id])
+
+  // Get direct replies
+  useEffect(() => {
+    api
+      .get(`posts/${id}/replies`)
+      .then((res) => {
+        console.log(res)
         setReplies(res.data.posts)
       })
       .catch((e) => {
@@ -40,38 +58,20 @@ const PostPage = () => {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 3 }}>
-      <Card>
-        <Stack direction="row">
-          <Avatar variant="rounded-m" sx={{ mr: 2 }}>
-            {post.user.name[0]}
-          </Avatar>
-          <Stack justifyContent="center">
-            <Stack direction="row" gap="3px" alignItems="center">
-              <Typography color="text.primary" fontWeight="600">
-                {post.user.name}
-              </Typography>
-              <Typography variant="caption" color="text.hint">
-                {'@'}
-                {post.user.username}
-              </Typography>
-            </Stack>
-            <Typography color="text.hint" variant="caption">
-              {date}
-            </Typography>
-          </Stack>
-        </Stack>
 
-        {/* Text */}
-        <Box sx={{ my: 3 }}>
-          <Typography>{post.text}</Typography>
-        </Box>
-      </Card>
+      {/* Parent chain */}
+      {parents?.map((post) => (
+        <Post key={post.id} post={post} variant='compact' sx={{ my: 3 }} />
+      ))}
 
-      {replies?.map(post => (
-        <Post 
-          {...post}
-          sx={{my: 3}}
-        />
+      <Post key={post.id} post={post} />
+      
+      {authenticated && (
+        <Reply sx={{mt: 1}}/>
+      )}
+      {/* Direct replies */}
+      {replies?.map((post) => (
+        <Post key={post.id} post={post} variant='compact' sx={{ my: 3 }} />
       ))}
     </Container>
   )

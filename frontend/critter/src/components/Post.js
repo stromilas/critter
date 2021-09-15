@@ -11,9 +11,10 @@ import {
 } from '@material-ui/core'
 import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
+import Interactions from './Interactions'
 import api from '../core/api'
 
-const Post = ({ sx, post }) => {
+const Post = ({ sx, post, variant = 'normal' }) => {
   const [liked, setLiked] = useState(post.liked)
   const [shared, setShared] = useState(post.shared)
   const history = useHistory()
@@ -50,6 +51,7 @@ const Post = ({ sx, post }) => {
   const date = new Date(post.created_at).toDateString()
   return (
     <Card onClick={goToPostPage} sx={{ cursor: 'pointer', ...sx }}>
+
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}>
           {post.user.name[0]}
@@ -69,8 +71,9 @@ const Post = ({ sx, post }) => {
           </Typography>
         </Stack>
       </Stack>
+      
       {post.parent && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 1 }}>
           <Typography variant="caption">
             Replying to {" "}
             <Link onClick={(e) => goToUserPage(e, post.parent.user.username)}>
@@ -80,31 +83,22 @@ const Post = ({ sx, post }) => {
         </Box>
       )}
       {/* Text */}
-      <Box sx={{ my: 3 }}>
+      <Box sx={{ my: 2 }}>
         <Typography>{post.text}</Typography>
       </Box>
-      {/* Likes & Shares */}
-      <Divider sx={{ my: 1 }} />
-      <Typography variant="subtitle1">
-        <Stack direction="row" gap="6px">
-          <Typography fontWeight="600">{post.shares}</Typography>
-          <Typography>shares</Typography>
-          <Typography fontWeight="600">{post.likes}</Typography>
-          <Typography>likes</Typography>
-        </Stack>
-      </Typography>
-      {/* Share or Like */}
-      <Divider sx={{ my: 1 }} />
-      <Stack direction="row">
-        <IconButton onClick={handleShare} edge="start">
-          <Loop sx={{ color: shared ? 'primary.main' : 'text.hint' }} />
-        </IconButton>
-        <IconButton onClick={handleLike}>
-          <Favorite sx={{ color: liked ? 'primary.main' : 'text.hint' }} />
-        </IconButton>
-      </Stack>
+      <Interactions 
+        shares={post.shares}
+        likes={post.likes}
+        shared={shared}
+        liked={liked}
+        handleShare={handleShare}
+        handleLike={handleLike}
+        variant={variant}
+      />
     </Card>
   )
 }
+
+
 
 export default Post
