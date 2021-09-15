@@ -23,16 +23,16 @@ userC = User(
     password="$2b$12$SNx3lApAQlhhOBdqiYaTAObOUdL/pOtU9YdlWGWUPwxIaMm7jHPxa",
 )
 
-reply = Post(text="Wooooo :o")
+replyC = Post(text="OK :)")
+userC.posts.append(replyC)
 
-userC.posts.append(
-    reply
-)
+replyB = Post(text="Wooooo :o", replies=[replyC])
+userB.posts.append(replyB)
 
 userA.followers.append(userB)
 userA.followers.append(userC)
 userA.posts.append(
-    Post(text="My first post :)", replies=[reply], interactions=[
+    Post(text="My first post :)", replies=[replyB], interactions=[
         Interaction(user=userB, type="like"),
         Interaction(user=userB, type="share"),
         Interaction(user=userB, type="like"),
