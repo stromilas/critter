@@ -60,7 +60,7 @@ class Post(Base):
     parent_id = Column(Integer, ForeignKey("post.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates='posts', lazy='joined')
-    replies = relationship("Post", backref=backref("parent", remote_side=[id]))
+    replies = relationship("Post", backref=backref("parent", remote_side=[id], lazy='noload'))
     text = Column(String(280))
     created_at = Column(DateTime, default=func.now())
     interactions = relationship("Interaction", back_populates="post")
