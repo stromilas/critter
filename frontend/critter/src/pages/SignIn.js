@@ -12,7 +12,7 @@ import {
 } from '@material-ui/core'
 import { LockOutlined } from '@material-ui/icons'
 import { Link as RouteLink, useHistory } from 'react-router-dom'
-import api from '../core/api'
+import api from '../core/endpoints'
 
 const SignIn = () => {
   const history = useHistory()

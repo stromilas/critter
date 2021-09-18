@@ -4,8 +4,9 @@ import { useSelector } from 'react-redux'
 import { Avatar, Card, Container, Stack, Typography } from '@material-ui/core'
 import Post from '../components/Post'
 import Reply from '../components/Reply'
-import api from '../core/api'
+import api from '../core/endpoints'
 import { Box } from '@material-ui/system'
+import { media } from '../core/endpoints'
 
 const PostPage = () => {
   const { id } = useParams()

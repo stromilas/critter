@@ -7,7 +7,7 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import SignIn from './pages/SignIn'
 import PostPage from './pages/PostPage'
-import api from './core/api'
+import api from './core/endpoints'
 import UserPage from './pages/UserPage'
 
 const App = () => {

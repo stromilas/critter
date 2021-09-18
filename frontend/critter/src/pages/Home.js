@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, Container, Stack } from '@material-ui/core'
 import { useSelector } from 'react-redux'
 import CreatePost from '../components/CreatePost'
-import api from '../core/api'
+import api from '../core/endpoints'
 import Post from '../components/Post'
 
 const Home = () => {

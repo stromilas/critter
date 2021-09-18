@@ -11,7 +11,7 @@ import {
 } from '@material-ui/core'
 import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
-import api from '../core/api'
+import api from '../core/endpoints'
 import { useSelector } from 'react-redux'
 
 
