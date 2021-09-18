@@ -12,7 +12,8 @@ import {
 import { Box } from '@material-ui/system'
 import { Favorite, Loop } from '@material-ui/icons'
 import Interactions from './Interactions'
-import api from '../core/api'
+import api from '../core/endpoints'
+import { media } from '../core/endpoints'
 
 const Post = ({ sx, post, variant = 'normal' }) => {
   const [liked, setLiked] = useState(post.liked)
@@ -53,9 +54,10 @@ const Post = ({ sx, post, variant = 'normal' }) => {
     <Card onClick={goToPostPage} sx={{ cursor: 'pointer', ...sx }}>
 
       <Stack direction="row">
-        <Avatar variant="rounded-m" sx={{ mr: 2 }}>
-          {post.user.name[0]}
-        </Avatar>
+        <Avatar variant="rounded-m" sx={{ mr: 2 }}
+          src={media + post.user.profile}
+          alt={post.user.name}
+        />
         <Stack justifyContent="center">
           <Stack direction="row" gap="3px" alignItems="center">
             <Typography color="text.primary" fontWeight="600">

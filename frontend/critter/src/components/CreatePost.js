@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Card, Typography, Divider, TextField, Stack, Avatar, Button } from '@material-ui/core'
 import { useSelector } from 'react-redux'
+import { media } from '../core/endpoints'
+
 
 const CreatePost = (props) => {
   const [text, setText] = useState('')
@@ -21,11 +23,10 @@ const CreatePost = (props) => {
             backgroundColor: 'primary.main',
             mr: 1,
           }}
+          src={media + user.profile}
           alt={user.name}
           variant="rounded-m"
-        >
-          {user?.name[0]}
-        </Avatar>
+        />
         <TextField
           variant="standard"
           fullWidth

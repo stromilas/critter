@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
+import { media } from '../core/endpoints'
 import {
   Avatar,
   Card,
@@ -25,11 +26,10 @@ const Reply = ({ sx, ...props }) => {
             backgroundColor: 'primary.main',
             mr: 1,
           }}
+          src={media + user.profile}
           alt={user.name}
           variant="rounded-m"
-        >
-          {user?.name[0]}
-        </Avatar>
+        />
         <TextField
           variant="standard"
           fullWidth

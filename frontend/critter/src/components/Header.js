@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import authActions from '../store/auth'
 import Logo from '../components/Logo'
 import { Link, useHistory } from 'react-router-dom'
+import { media } from '../core/endpoints'
+import { ArrowDropDownRounded } from '@material-ui/icons'
 import {
   AppBar,
   Box,
@@ -14,8 +16,6 @@ import {
   IconButton,
   MenuItem,
 } from '@material-ui/core'
-import { ArrowDropDownRounded } from '@material-ui/icons'
-
 
 const Header = ({ children }) => {
   const authenticated = useSelector((state) => state.auth.authenticated)
@@ -25,36 +25,54 @@ const Header = ({ children }) => {
   const history = useHistory()
 
   const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+    setAnchorEl(event.currentTarget)
+  }
 
   const handleClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
+
+
+  const handleProfile = () => {
+    handleClose()
+    history.push(`/users/${user.username}`)
+  }
 
   const handleLogout = () => {
-    dispatch(authActions.logout())
     handleClose()
+    dispatch(authActions.logout())
   }
 
   return (
-    <Box sx={{ flexGrow: 1 }} >
+    <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" elevation={1}>
-        <Toolbar sx={{ justifyContent: 'space-between', backgroundColor: 'background.paper' }} >
+        <Toolbar
+          sx={{
+            justifyContent: 'space-between',
+            backgroundColor: 'background.paper',
+          }}
+        >
           {/* Logo */}
           <div onClick={() => history.push('/')}>
-            <Stack direction="row" alignItems="center" sx={{cursor: 'pointer'}}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              sx={{ cursor: 'pointer' }}
+            >
               <Logo />
-              <Typography variant="h6" component="div" color='text.primary' fontWeight='600'>
+              <Typography
+                variant="h6"
+                component="div"
+                color="text.primary"
+                fontWeight="600"
+              >
                 Critter
               </Typography>
             </Stack>
           </div>
 
           {/* Tabs */}
-          <Box sx={{ alignSelf: 'flex-end'}}>
-            {children}
-          </Box>
+          <Box sx={{ alignSelf: 'flex-end' }}>{children}</Box>
 
           {/* User Avatar | Login */}
           {!authenticated ? (
@@ -66,22 +84,27 @@ const Header = ({ children }) => {
                   backgroundColor: 'primary.main',
                   mr: 1,
                 }}
+                src={media + user.profile}
                 alt={user.name}
                 variant="rounded-s"
+              />
+              <Typography
+                variant="body1"
+                component="div"
+                fontWeight="bold"
+                sx={{ color: 'text.primary', cursor: 'pointer' }}
+                onClick={() => history.push(`/users/${user.username}`)}
               >
-                {user.name[0]}
-              </Avatar>
-              <Typography variant="body1" component="div" fontWeight='bold' sx={{ color: 'text.primary', cursor: 'default' }}>
                 {user.name}
               </Typography>
               <Box sx={{ mx: 1 }}>
                 <IconButton
-                  size='small'
+                  size="small"
                   onClick={handleMenu}
-                  color='inherit'
+                  color="inherit"
                   aria-label="User Settings"
-                  aria-controls='menu-appbar'
-                  aria-haspopup='true'
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
                 >
                   <ArrowDropDownRounded sx={{ width: 32, height: 32 }} />
                 </IconButton>
@@ -99,6 +122,7 @@ const Header = ({ children }) => {
                   open={Boolean(anchorEl)}
                   onClose={handleClose}
                 >
+                  <MenuItem onClick={handleProfile}>Profile</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
               </Box>
