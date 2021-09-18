@@ -23,10 +23,10 @@ async def get_self(user: User = Depends(auth)):
         print(e)
         raise HTTPException(500)
 
-@router.get("/{id}")
-async def get_posts(id: int):
+@router.get("/{username}")
+async def get_posts(username: str):
     try:
-        stmt = select(User).filter_by(id=id)
+        stmt = select(User).filter_by(username=username)
         user = session.execute(stmt).scalar_one()
         user = schemas.PublicUser(**user.__dict__)
         return {"user": user}

@@ -27,6 +27,8 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(Text, unique=True)
     name = Column(Text)
+    profile = Column(Text, default='defaults/profile.jpg')
+    banner = Column(Text, default='defaults/banner.jpg')
     website = Column(Text, nullable=True)
     location = Column(Text, nullable=True)
     password = Column(Text)
