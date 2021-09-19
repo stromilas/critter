@@ -84,6 +84,22 @@ export const themeOptions = {
             borderRadius: '4px',
           }
         },
+        {
+          props: { variant: 'rounded-xl', },
+          style: {
+            height: '100px',
+            width: '100px',
+            borderRadius: '4px',
+          }
+        },
+        {
+          props: { variant: 'rounded-xxl', },
+          style: {
+            height: '140px',
+            width: '140px',
+            borderRadius: '4px',
+          }
+        },
       ]
     },
     // Button
@@ -109,29 +125,3 @@ export const themeOptions = {
 }
 
 export default themeOptions
-
-
-
-
-// primary: {
-//   main: '#2F80ED',
-//   light: '#73afff',
-//   dark: '#0055ba',
-//   contrastText: '#f3f3f3',
-// },
-// secondary: {
-//   main: '#ff6d8c',
-//   dark: '#c83a5f',
-//   light: '#ffa0bc',
-//   contrastText: '#000000',
-// },
-// text: {
-//   primary: '#333333',
-//   secondary: '#4F4F4F',
-//   disabled: '#BDBDBD',
-//   hint: '#BDBDBD',
-// },
-// background: {
-//   default: '#F2F2F2',
-//   paper: '#FFFFFF',
-// }
