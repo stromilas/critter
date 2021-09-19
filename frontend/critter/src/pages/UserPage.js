@@ -6,24 +6,31 @@ import {
   CircularProgress,
   Container,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from '@material-ui/core'
 import { useSelector } from 'react-redux'
+import { Switch, Link, Route } from 'react-router-dom'
 import CreatePost from '../components/CreatePost'
 import api, { media } from '../core/endpoints'
 import Post from '../components/Post'
-import { useParams } from 'react-router'
+import { Redirect, useLocation, useParams, useRouteMatch } from 'react-router'
 import { Box } from '@material-ui/system'
+import Posts from '../components/Posts'
 
 const UserPage = () => {
-  const { id } = useParams()
-  const [posts, setPosts] = useState([])
+  const { username } = useParams()
   const [user, setUser] = useState()
   const [loading, setLoading] = useState(true)
+  const myId = useSelector((state) => state.auth?.user?.id)
+  const authenticated = useSelector((state) => state.auth.authenticated)
+  const { url } = useRouteMatch()
+  const { pathname } = useLocation()
 
   useEffect(() => {
     api
-      .get(`users/${id}`)
+      .get(`users/${username}`)
       .then((res) => {
         setUser(res.data.user)
         setLoading(false)
@@ -31,7 +38,7 @@ const UserPage = () => {
       .catch((e) => {
         console.error(e)
       })
-  }, [id])
+  }, [username])
 
   return (
     <>
@@ -91,13 +98,75 @@ const UserPage = () => {
                   </Stack>
                 </Stack>
                 <Box sx={{ flexGrow: 1 }} />
-                <Button variant="contained" color="primary">
-                  Follow
-                </Button>
+
+                {authenticated ? (
+                  myId != user.id &&
+                  (user.is_following ? (
+                    <Button variant="text" color="primary">
+                      Unfollow
+                    </Button>
+                  ) : (
+                    <Button variant="contained" color="primary">
+                      Follow
+                    </Button>
+                  ))
+                ) : (
+                  <Button disabled variant="contained" color="primary">
+                    Follow
+                  </Button>
+                )}
               </Stack>
             </Card>
-
             {/* Contents */}
+            <Stack direction="row" gap={2} sx={{ mt: 2 }}>
+              <Card sx={{ width: { xs: 200, md: 300 }, height: '100%', pr: 0 }} >
+                <Tabs
+                  value={pathname}
+                  orientation="vertical"
+                  scrollButtons={false}
+                >
+                  <Tab
+                    label="Tweets"
+                    value={`${url}/tweets`}
+                    to={`${url}/tweets`}
+                    component={Link}
+                    sx={{ color: 'inherit', mr: 2 }}
+                  />
+                  <Tab
+                    label="Tweets & Replies"
+                    value={`${url}/replies`}
+                    to={`${url}/replies`}
+                    component={Link}
+                    sx={{ color: 'inherit', mr: 2 }}
+                  />
+                  <Tab
+                    label="Media"
+                    value={`${url}/media`}
+                    to={`${url}/media`}
+                    component={Link}
+                    sx={{ color: 'inherit', mr: 2 }}
+                  />
+                  <Tab
+                    label="Likes"
+                    value={`${url}/likes`}
+                    to={`${url}/likes`}
+                    component={Link}
+                    sx={{ color: 'inherit', mr: 2 }}
+                  />
+                </Tabs>
+              </Card>
+              <Stack direction="column" gap={2} sx={{ flexGrow: 1 }}>
+                <Switch>
+                  <Route path={url} exact>
+                    <Redirect to={`${url}/tweets`} />
+                  </Route>
+                  <Route path={`${url}/tweets`}>
+                    <Posts username={username} />
+                  </Route>
+                  <Route path={`${url}/replies`}></Route>
+                </Switch>
+              </Stack>
+            </Stack>
           </Container>
         </>
       )}

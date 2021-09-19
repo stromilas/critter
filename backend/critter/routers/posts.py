@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import contains_eager, joinedload, aliased
 from sqlalchemy.sql.expression import case
 from sqlalchemy.sql.functions import func
+from critter.controllers import post as ctrl_post
 
 # Configuration
 router = APIRouter(
@@ -27,7 +28,7 @@ async def get_posts(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = posts_subquery(user_id=user.id if user else None, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(user_id=user.id if user else None, skip=skip, limit=limit)
 
         stmt = (
             select(Post, subquery)
@@ -36,7 +37,7 @@ async def get_posts(
         )
 
         results = session.execute(stmt).all()
-        posts = parse_posts(results)
+        posts = ctrl_post.parse_posts(results)
 
         return {"posts": posts}
 
@@ -51,12 +52,12 @@ async def get_posts(
 @router.get("/{id}")
 async def get_post(id: int, user: Optional[User] = Depends(auth_optional)):
     try:
-        subquery = posts_subquery(user_id=user.id if user else None, ids=[id])
+        subquery = ctrl_post.get_posts(user_id=user.id if user else None, ids=[id])
 
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
         results = session.execute(stmt).all()
-        post = parse_posts(results)[0]
+        post = ctrl_post.parse_posts(results)[0]
 
         return {"post": post}
 
@@ -101,13 +102,13 @@ async def get_parents(
         parent_ids = [x[0] for x in results]
 
         # Get parent post chain
-        subquery = posts_subquery(
+        subquery = ctrl_post.get_posts(
             user_id=user.id if user else None, ids=parent_ids, skip=skip, limit=limit
         )
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
         results = session.execute(stmt).all()
-        posts = parse_posts(results)
+        posts = ctrl_post.parse_posts(results)
 
         return {"posts": posts}
 
@@ -127,12 +128,12 @@ async def get_replies(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = posts_subquery(user_id=user.id if user else None, parent_id=id, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(user_id=user.id if user else None, parent_id=id, skip=skip, limit=limit)
 
         stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
 
         results = session.execute(stmt).all()
-        posts = parse_posts(results)
+        posts = ctrl_post.parse_posts(results)
 
         return {"posts": posts}
 
@@ -230,18 +231,6 @@ async def interact_like(
         error(e)
         session.rollback()
         raise HTTPException(500)
-
-
-def parse_posts(results):
-    posts = []
-    for post in results:
-        p = post[0].__dict__
-        p["likes"] = post.likes
-        p["shares"] = post.shares
-        p["liked"] = post.liked 
-        p["shared"] = post.shared
-        posts.append(schemas.OutPost(**p))
-    return posts
 
 
 def posts_subquery(

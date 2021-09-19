@@ -42,7 +42,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
 
   const goToUserPage = (e, username) => {
     e.stopPropagation()
-    history.push(`users/${username}`)
+    history.push(`/users/${username}`)
   }
 
   const goToPostPage = (e) => {

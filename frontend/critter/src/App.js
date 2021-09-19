@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter as Router, Link, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Link, Route, Redirect } from 'react-router-dom'
 import { CssBaseline, Tab, Tabs } from '@material-ui/core'
 import { ThemeProvider, createTheme } from '@material-ui/core'
 import themeOptions from './theme/main'
@@ -64,7 +64,7 @@ const App = () => {
           <Route path="/" exact>
             <Home />
           </Route>
-          <Route path="/users/:id" exact>
+          <Route path="/users/:username">
             <UserPage />
           </Route>
           <Route path="/posts/:id">
