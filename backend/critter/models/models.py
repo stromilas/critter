@@ -8,17 +8,11 @@ from sqlalchemy import Enum
 from sqlalchemy import Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import backref
+from sqlalchemy.orm.session import object_session
 from sqlalchemy.sql import func
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.sql.expression import select
 from .base import Base
-
-# Two-table adjacency list
-follower = Table(
-    "follower",
-    Base.metadata,
-    Column("left_id", Integer, ForeignKey("user.id"), primary_key=True),
-    Column("right_id", Integer, ForeignKey("user.id"), primary_key=True),
-    Column("created_at", DateTime, default=func.now()),
-)
 
 
 class User(Base):
@@ -27,19 +21,37 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(Text, unique=True)
     name = Column(Text)
-    profile = Column(Text, default='defaults/profile.jpg')
-    banner = Column(Text, default='defaults/banner.jpg')
+    profile = Column(Text, default="defaults/profile.jpg")
+    banner = Column(Text, default="defaults/banner.jpg")
     website = Column(Text, nullable=True)
     location = Column(Text, nullable=True)
     password = Column(Text)
-    posts = relationship("Post", lazy='noload', back_populates='user')
-    interactions = relationship("Interaction", lazy='noload', back_populates='user')
-    followers = relationship(
-        "User",
-        secondary=follower,
-        primaryjoin=(id == follower.c.left_id),
-        secondaryjoin=(id == follower.c.right_id),
-        backref="followees",
+    posts = relationship("Post", lazy="noload", back_populates="user")
+    interactions = relationship("Interaction", lazy="noload", back_populates="user")
+
+
+    # Temp. experimental usage
+    following = association_proxy('followees', 'followee')
+    followed_by = association_proxy('followers', 'follower')
+
+# Association object
+class Follow(Base):
+    __tablename__ = "follow"
+    follower_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    followee_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    created_at = Column(DateTime, default=func.now())
+
+    follower = relationship(
+        User,
+        primaryjoin=(follower_id == User.id),
+        backref=backref("followees", lazy="noload"),
+        lazy="noload",
+    )
+    followee = relationship(
+        User,
+        primaryjoin=(followee_id == User.id),
+        backref=backref("followers", lazy="noload"),
+        lazy="noload",
     )
 
 
@@ -49,9 +61,9 @@ class Interaction(Base):
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, default=func.now())
     user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship('User', back_populates='interactions', lazy='noload')
+    user = relationship("User", back_populates="interactions", lazy="noload")
     post_id = Column(Integer, ForeignKey("post.id"))
-    post = relationship('Post', back_populates='interactions', lazy='noload')
+    post = relationship("Post", back_populates="interactions", lazy="noload")
     type = Column(Enum("like", "share", "mention", name="interaction_type"))
 
 
@@ -61,8 +73,10 @@ class Post(Base):
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey("post.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", back_populates='posts', lazy='joined')
-    replies = relationship("Post", backref=backref("parent", remote_side=[id], lazy='noload'))
+    user = relationship("User", back_populates="posts", lazy="joined")
+    replies = relationship(
+        "Post", backref=backref("parent", remote_side=[id], lazy="noload")
+    )
     text = Column(String(280))
     created_at = Column(DateTime, default=func.now())
     interactions = relationship("Interaction", back_populates="post")

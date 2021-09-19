@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from critter.models import User, Post, Interaction
+from critter.models import User, Post, Interaction, Follow
 
 engine = create_engine(
     "postgresql+psycopg2://postgres:rootcritter@localhost:5432/critters"
@@ -29,8 +29,11 @@ userC.posts.append(replyC)
 replyB = Post(text="Wooooo :o", replies=[replyC])
 userB.posts.append(replyB)
 
-userA.followers.append(userB)
-userA.followers.append(userC)
+
+userA.followers.append(Follow(follower=userB))
+userA.followers.append(Follow(follower=userC))
+userA.followees.append(Follow(followee=userC))
+
 userA.posts.append(
     Post(text="My first post :)", replies=[replyB], interactions=[
         Interaction(user=userB, type="like"),
