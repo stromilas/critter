@@ -40,12 +40,15 @@ const Post = ({ sx, post, variant = 'normal' }) => {
     })
   }
 
-  const goToUserPage = (e, username) => {
+  const goToUserPage = (e) => {
     e.stopPropagation()
-    history.push(`/users/${username}`)
+    const username = post.user?.username
+    if(username) {
+      history.push(`/users/${username}`)
+    }
   }
 
-  const goToPostPage = (e) => {
+  const goToPostPage = () => {
     history.push(`/posts/${post.id}/`)
   }
 
@@ -55,10 +58,11 @@ const Post = ({ sx, post, variant = 'normal' }) => {
 
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}
+          onClick={goToUserPage}
           src={media + post.user.profile}
           alt={post.user.name}
         />
-        <Stack justifyContent="center">
+        <Stack justifyContent="center" onClick={goToUserPage}>
           <Stack direction="row" gap="3px" alignItems="center">
             <Typography color="text.primary" fontWeight="600">
               {post.user.name}
@@ -78,7 +82,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
         <Box sx={{ mt: 1 }}>
           <Typography variant="caption">
             Replying to {" "}
-            <Link onClick={(e) => goToUserPage(e, post.parent.user.username)}>
+            <Link onClick={goToUserPage}>
               @{post.parent.user.username}
             </Link>
           </Typography>

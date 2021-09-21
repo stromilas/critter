@@ -3,22 +3,24 @@ import { useParams} from 'react-router'
 import api from '../core/endpoints'
 import Post from './Post'
 
-const Posts = ({ username }) => {
+const Posts = ({ username, likes }) => {
   const [posts, setPosts] = useState([])
 
   useEffect(() => {
+    const data = {
+      params: {
+        likes
+      }
+    }
     api
-      .get(`users/${username}/posts`)
+      .get(`users/${username}/posts`, data)
       .then(res => {
         setPosts(res.data.posts)
       })
       .catch(e => {
         console.error(e)
-        // TODO: Show notification
       })
-  }, [username])
-
-  console.log(posts);
+  }, [username, likes])
   
   return (
     <>

@@ -163,6 +163,9 @@ const UserPage = () => {
                   <Route path={`${url}/tweets`}>
                     <Posts username={username} />
                   </Route>
+                  <Route path={`${url}/likes`}>
+                    <Posts username={username} likes />
+                  </Route>
                   <Route path={`${url}/replies`}></Route>
                 </Switch>
               </Stack>
