@@ -23,7 +23,7 @@ const Home = () => {
     const body = {
       post: {
         text,
-      }
+      },
     }
     api
       .post('posts', body)
@@ -39,7 +39,7 @@ const Home = () => {
     <Container sx={{ mt: 5 }}>
       <Stack direction="row" spacing={5}>
         {/* Feed */}
-        <Stack flexGrow="1" spacing={5}>
+        <Stack flexGrow="1" spacing={5} sx={{ maxWidth: '800px' }}>
           {authenticated && <CreatePost onSubmit={submitPost} />}
           {posts.map((post) => (
             <Post key={post.id} post={post} />
@@ -56,7 +56,7 @@ const Home = () => {
             },
           }}
         >
-          <Card sx={{p: 5}}>Trend</Card>
+          <Card sx={{ p: 5 }}>Trend</Card>
         </Stack>
       </Stack>
     </Container>

@@ -80,9 +80,9 @@ async def get_user(username: str, _user: User = Depends(auth_optional)):
 @router.get("/{username}/posts", response_model=schemas.OutPosts)
 async def get_user_posts(
     username: str,
+    _user: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
-    _user: Optional[User] = Depends(auth_optional),
     likes: Optional[bool] = Query(False)
 ):
     try:
@@ -120,42 +120,3 @@ async def get_user_posts(
         print(e)
         raise HTTPException(500)
 
-@router.get("/{username}/posts/likes", response_model=schemas.OutPosts)
-async def get_user_posts(
-    username: str,
-    skip: Optional[int] = Query(0),
-    limit: Optional[int] = Query(10),
-    _user: Optional[User] = Depends(auth_optional),
-):
-    try:
-        subquery = ctrl_post.get_posts(
-            user_id=_user.id if _user else None, skip=skip, limit=limit
-        )
-
-        stmt = select(User).filter_by(username=username)
-        user = session.execute(stmt).scalar()
-
-        if not user:
-            raise HTTPException(404)
-
-        stmt = (
-            select(Post, subquery)
-            .options(joinedload(Post.parent))
-            .join(subquery, subquery.c.id == Post.id)
-            .filter(Post.user_id == user.id)
-        )
-
-        results = session.execute(stmt).all()
-        posts = ctrl_post.parse_posts(results)
-
-        return {"posts": posts}
-
-    except NoResultFound:
-        raise HTTPException(404)
-
-    except HTTPException as exception:
-        raise HTTPException(**exception.__dict__)
-
-    except Exception as e:
-        print(e)
-        raise HTTPException(500)

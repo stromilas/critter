@@ -25,7 +25,7 @@ const Posts = ({ username, likes }) => {
   return (
     <>
       {posts.map(post => (
-        <Post post={post} />
+        <Post key={post.id} post={post} />
       ))}
     </>
   )
