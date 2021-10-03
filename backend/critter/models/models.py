@@ -1,3 +1,6 @@
+
+from uuid import uuid4
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import String
 from sqlalchemy import DateTime
 from sqlalchemy import Column
@@ -5,13 +8,11 @@ from sqlalchemy import Integer
 from sqlalchemy import Text
 from sqlalchemy import ForeignKey
 from sqlalchemy import Enum
-from sqlalchemy import Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import backref
-from sqlalchemy.orm.session import object_session
 from sqlalchemy.sql import func
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.sql.expression import select
+from sqlalchemy.sql.sqltypes import VARCHAR
 from .base import Base
 
 
@@ -37,8 +38,8 @@ class User(Base):
 # Association object
 class Follow(Base):
     __tablename__ = "follow"
-    follower_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
-    followee_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    follower_id = Column(ForeignKey("user.id"), primary_key=True)
+    followee_id = Column(ForeignKey("user.id"), primary_key=True)
     created_at = Column(DateTime, default=func.now())
 
     follower = relationship(
@@ -60,9 +61,9 @@ class Interaction(Base):
 
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, default=func.now())
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(ForeignKey("user.id"))
     user = relationship("User", back_populates="interactions", lazy="noload")
-    post_id = Column(Integer, ForeignKey("post.id"))
+    post_id = Column(ForeignKey("post.id"))
     post = relationship("Post", back_populates="interactions", lazy="noload")
     type = Column(Enum("like", "share", "mention", name="interaction_type"))
 
@@ -70,9 +71,9 @@ class Interaction(Base):
 class Post(Base):
     __tablename__ = "post"
 
-    id = Column(Integer, primary_key=True)
-    parent_id = Column(Integer, ForeignKey("post.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    parent_id = Column(ForeignKey("post.id"), nullable=True)
+    user_id = Column(ForeignKey("user.id"))
     user = relationship("User", back_populates="posts", lazy="joined")
     replies = relationship(
         "Post", backref=backref("parent", remote_side=[id], lazy="noload")
@@ -90,7 +91,7 @@ class Hashtag(Base):
     id = Column(Integer, primary_key=True)
     tag = Column(String(100))
     created_at = Column(DateTime, default=func.now())
-    post_id = Column(Integer, ForeignKey("post.id"))
+    post_id = Column(ForeignKey("post.id"))
     post = relationship("Post", back_populates="hashtags")
 
 
@@ -98,6 +99,6 @@ class Media(Base):
     __tablename__ = "media"
 
     id = Column(Integer, primary_key=True)
-    post_id = Column(Integer, ForeignKey("post.id"))
+    post_id = Column(ForeignKey("post.id"))
     post = relationship("Post", back_populates="media")
-    url = Column(Text)
+    file_name = Column(VARCHAR(150))
