@@ -1,21 +1,26 @@
 from operator import and_, or_
 from typing import List, Optional
+from botocore.config import Config
 from critter.models import User, Post
 from critter.database import session
 from critter.common import auth, auth_optional
 from critter.core import error
 from critter import schemas
-from critter.models.models import Interaction
+from critter.models.models import Interaction, Media
 from fastapi.param_functions import Body, Query
+from pydantic.types import UUID4
 from sqlalchemy import select, desc, asc
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import contains_eager, joinedload, aliased
+from sqlalchemy.orm import contains_eager, joinedload, aliased, selectinload
 from sqlalchemy.sql.expression import case
 from sqlalchemy.sql.functions import func
 from critter.controllers import post as ctrl_post
+import boto3
 
 # Configuration
+boto3.setup_default_session(profile_name="dev")
+
 router = APIRouter(
     prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
 )
@@ -28,12 +33,15 @@ async def get_posts(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = ctrl_post.get_posts(user_id=user.id if user else None, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(
+            user_id=user.id if user else None, skip=skip, limit=limit
+        )
 
         stmt = (
             select(Post, subquery)
             .options(joinedload(Post.parent))
             .join(subquery, subquery.c.id == Post.id)
+            .options(selectinload(Post.media))
         )
 
         results = session.execute(stmt).all()
@@ -49,15 +57,45 @@ async def get_posts(
         raise HTTPException(500)
 
 
+@router.get("/media-endpoint")
+async def get_media_endpoint(
+    user: User = Depends(auth),
+    id: UUID4 = Query(...),
+    file: str = Query(...),
+):
+    s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
+    try:
+        signed_url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": "critter-public",
+                "Key": f"posts/{user.username}/{id}/{file}",
+            },
+            ExpiresIn=10,
+        )
+        return signed_url
+
+    except Exception as e:
+        error(e)
+        session.rollback()
+        raise HTTPException(500)
+
+
 @router.get("/{id}")
-async def get_post(id: int, user: Optional[User] = Depends(auth_optional)):
+async def get_post(id: UUID4, user: Optional[User] = Depends(auth_optional)):
     try:
         subquery = ctrl_post.get_posts(user_id=user.id if user else None, ids=[id])
 
-        stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
+        stmt = (
+            select(Post, subquery)
+            .join(subquery, subquery.c.id == Post.id)
+            .options(selectinload(Post.media))
+        )
 
         results = session.execute(stmt).all()
         post = ctrl_post.parse_posts(results)[0]
+
+        print(post.__dict__)
 
         return {"post": post}
 
@@ -71,7 +109,7 @@ async def get_post(id: int, user: Optional[User] = Depends(auth_optional)):
 
 @router.get("/{id}/parents")
 async def get_parents(
-    id: int,
+    id: UUID4,
     user: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
@@ -81,7 +119,7 @@ async def get_parents(
         post = session.execute(stmt).scalar()
 
         # If current post is the root
-        if (post.parent_id is None):
+        if post.parent_id is None:
             return {"posts": []}
 
         # Get initial parent
@@ -94,8 +132,7 @@ async def get_parents(
         # Get initial parent's parent
         # and recurse using latest parent
         stmt = hierarchy.union_all(
-            select(Post.id, Post.parent_id)
-            .filter(Post.id == hierarchy.c.parent_id)
+            select(Post.id, Post.parent_id).filter(Post.id == hierarchy.c.parent_id)
         )
 
         results = session.execute(select(stmt)).all()
@@ -122,15 +159,21 @@ async def get_parents(
 
 @router.get("/{id}/replies")
 async def get_replies(
-    id: int,
+    id: UUID4,
     user: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = ctrl_post.get_posts(user_id=user.id if user else None, parent_id=id, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(
+            user_id=user.id if user else None, parent_id=id, skip=skip, limit=limit
+        )
 
-        stmt = select(Post, subquery).join(subquery, subquery.c.id == Post.id)
+        stmt = (
+            select(Post, subquery)
+            .join(subquery, subquery.c.id == Post.id)
+            .options(selectinload(Post.media))
+        )
 
         results = session.execute(stmt).all()
         posts = ctrl_post.parse_posts(results)
@@ -150,7 +193,11 @@ async def create_post(
     user: User = Depends(auth), post: schemas.InPost = Body(..., embed=True)
 ):
     try:
-        new_post = Post(**post.__dict__)
+        new_post = Post(
+            id=post.id,
+            text=post.text,
+            media=[Media(file_name=file) for file in post.files],
+        )
         user.posts.append(new_post)
         session.commit()
         return
@@ -166,7 +213,7 @@ async def create_post(
 
 @router.post("/{id}/replies", status_code=201)
 async def create_reply(
-    id: int,
+    id: UUID4,
     user: User = Depends(auth),
     post: schemas.InPost = Body(..., embed=True),
 ):
@@ -194,7 +241,7 @@ async def create_reply(
 
 @router.post("/{id}/{type}", status_code=201)
 async def interact_like(
-    id: int,
+    id: UUID4,
     type: schemas.InteractType,
     body: schemas.InInteract = Body(...),
     user: User = Depends(auth),
@@ -235,7 +282,7 @@ async def interact_like(
 
 def posts_subquery(
     user_id: int,
-    parent_id: int = None,
+    parent_id: UUID4 = None,
     ids: List = None,
     limit: int = 10,
     skip: int = 0,
@@ -286,8 +333,7 @@ def posts_subquery(
                     ],
                     else_=0,
                 ),
-            ).label("shared")
-
+            ).label("shared"),
         )
         .join(Interaction, Post.interactions, isouter=True)
         .filter(Post.parent_id == parent_id if parent_id is not None else True)

@@ -49,6 +49,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
   }
 
   const goToPostPage = () => {
+    console.log(post)
     history.push(`/posts/${post.id}/`)
   }
 
@@ -77,7 +78,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
           </Typography>
         </Stack>
       </Stack>
-      
+      {/* Conditional | Replying to */}
       {post.parent && (
         <Box sx={{ mt: 1 }}>
           <Typography variant="caption">
@@ -92,6 +93,17 @@ const Post = ({ sx, post, variant = 'normal' }) => {
       <Box sx={{ my: 2 }}>
         <Typography>{post.text}</Typography>
       </Box>
+      {/* Conditional | Media */}
+      <Stack direction='row' gap={1} flexWrap='wrap'>
+        {post.media?.map(file => (
+          <Box 
+            src={`${process.env.REACT_APP_PUBLIC_URL}posts/${post.user.username}/${post.id}/${file.file_name}`}
+            component="img"
+            loading='lazy'
+            sx={{ objectFit: 'cover', height: 200, width: 'auto' }}
+          />
+        ))}
+      </Stack>
       <Interactions 
         shares={post.shares}
         likes={post.likes}

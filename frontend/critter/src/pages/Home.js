@@ -19,14 +19,11 @@ const Home = () => {
       .catch((e) => console.error(e))
   }, [])
 
-  const submitPost = (text) => {
+  const submitPost = (id, text, files) => {
     const body = {
-      post: {
-        text,
-      },
+      post: { id, text, files },
     }
-    api
-      .post('posts', body)
+    api.post('posts', body)
       .then((res) => {
         console.log(res)
       })
