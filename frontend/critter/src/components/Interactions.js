@@ -10,7 +10,7 @@ import {
   Link
 } from '@material-ui/core'
 import { Box } from '@material-ui/system'
-import { Favorite, Loop } from '@material-ui/icons'
+import { Favorite, Loop, Bookmark } from '@material-ui/icons'
 import api from '../core/endpoints'
 import { useSelector } from 'react-redux'
 
@@ -45,6 +45,11 @@ export const Normal = (props) => {
       props.handleLike(e)
     }
   }
+
+  const save = (e) => {
+    e.stopPropagation()
+    props.handleSave(e)
+  }
   
   return (
     <Box>
@@ -58,7 +63,7 @@ export const Normal = (props) => {
           <Typography>likes</Typography>
         </Stack>
       </Typography>
-      {/* Share or Like */}
+      {/* Share / Like / Saved */}
       <Divider sx={{ my: 1 }} />
       <Stack direction="row">
         <IconButton onClick={(e) => updateShares(e, props.shared ? -1 : 1)} edge="start">
@@ -66,6 +71,9 @@ export const Normal = (props) => {
         </IconButton>
         <IconButton onClick={(e) => updateLikes(e, props.liked ? -1 : 1)}>
           <Favorite sx={{ color: props.liked ? 'primary.main' : 'text.hint' }} />
+        </IconButton>
+        <IconButton onClick={save}>
+          <Bookmark sx={{ color: props.saved ? 'primary.main' : 'text.hint' }} />
         </IconButton>
       </Stack>
     </Box>
@@ -91,6 +99,11 @@ export const Compact = (props) => {
       setLikes(likes + digit)
       props.handleLike(e)
     }
+  }
+
+  const save = (e) => {
+    e.stopPropagation()
+    props.handleSave()
   }
 
 

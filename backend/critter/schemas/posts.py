@@ -9,6 +9,7 @@ from .users import PublicUser
 class InteractType(str, Enum):
     like = "like"
     share = "share"
+    save = "save"
 
 
 class Media(CoreModel):
@@ -41,6 +42,7 @@ class OutPost(CoreModel):
     likes: int
     liked: Optional[bool] = False
     shared: Optional[bool] = False
+    saved: Optional[bool] = False
     media: Optional[List[Media]]
 
 

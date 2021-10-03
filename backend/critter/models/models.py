@@ -65,7 +65,7 @@ class Interaction(Base):
     user = relationship("User", back_populates="interactions", lazy="noload")
     post_id = Column(ForeignKey("post.id"))
     post = relationship("Post", back_populates="interactions", lazy="noload")
-    type = Column(Enum("like", "share", "mention", name="interaction_type"))
+    type = Column(Enum("like", "share", "mention", "save", name="interaction_type"))
 
 
 class Post(Base):

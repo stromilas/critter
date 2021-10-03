@@ -7,8 +7,9 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import SignIn from './pages/SignIn'
 import PostPage from './pages/PostPage'
-import api from './core/endpoints'
 import UserPage from './pages/UserPage'
+import BookmarkPage from './pages/BookmarkPage'
+import api from './core/endpoints'
 
 const App = () => {
   const theme = createTheme(themeOptions)
@@ -51,7 +52,7 @@ const App = () => {
                     sx={{ color: 'inherit' }}
                   />
                   <Tab
-                    label="Bookmars"
+                    label="Bookmarks"
                     value="/bookmarks"
                     component={Link}
                     to="/bookmarks"
@@ -71,7 +72,9 @@ const App = () => {
             <PostPage />
           </Route>
           <Route path="/explore">WIP</Route>
-          <Route path="/bookmarks">WIP</Route>
+          <Route path="/bookmarks">
+            <BookmarkPage />
+          </Route>
           <Route path="/login">
             <SignIn />
           </Route>

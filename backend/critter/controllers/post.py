@@ -23,6 +23,7 @@ def parse_posts(results):
         p["shares"] = post.shares
         p["liked"] = post.liked 
         p["shared"] = post.shared
+        p["saved"] = post.saved
         posts.append(schemas.OutPost(**p))
     return posts
 
@@ -81,6 +82,20 @@ def get_posts(
                     else_=0,
                 ),
             ).label("shared"),
+            func.max(
+                case(
+                    [
+                        (
+                            and_(
+                                Interaction.type == "save",
+                                (Interaction.user_id == user_id) if user_id else False,
+                            ),
+                            1,
+                        ),
+                    ],
+                    else_=0,
+                ),
+            ).label("saved"),
         )
         .join(Interaction, Post.interactions, isouter=True)
         .filter(Post.parent_id == parent_id if parent_id is not None else True)

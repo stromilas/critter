@@ -28,13 +28,13 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.OutPosts)
 async def get_posts(
-    user: Optional[User] = Depends(auth_optional),
+    me: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
 ):
     try:
         subquery = ctrl_post.get_posts(
-            user_id=user.id if user else None, skip=skip, limit=limit
+            user_id=me.id if me else None, skip=skip, limit=limit
         )
 
         stmt = (
@@ -57,9 +57,38 @@ async def get_posts(
         raise HTTPException(500)
 
 
+@router.get("/saved", response_model=schemas.OutPosts)
+async def get_saved_posts(
+    me: User = Depends(auth),
+    skip: Optional[int] = Query(0),
+    limit: Optional[int] = Query(10),
+):
+    try:
+        subquery = ctrl_post.get_posts(
+            user_id=me.id if me else None, skip=skip, limit=limit, 
+        )
+
+        stmt = (
+            select(Post, subquery)
+            .join(subquery, subquery.c.id == Post.id)
+            .where(subquery.c.saved == 1)
+            .options(selectinload(Post.media))
+        )
+
+        results = session.execute(stmt).all()
+        posts = ctrl_post.parse_posts(results)
+        
+        return {"posts": posts}
+
+    except Exception as e:
+        error(e)
+        session.rollback()
+        raise HTTPException(500)
+
+
 @router.get("/media-endpoint")
 async def get_media_endpoint(
-    user: User = Depends(auth),
+    me: User = Depends(auth),
     id: UUID4 = Query(...),
     file: str = Query(...),
 ):
@@ -69,7 +98,7 @@ async def get_media_endpoint(
             "put_object",
             Params={
                 "Bucket": "critter-public",
-                "Key": f"posts/{user.username}/{id}/{file}",
+                "Key": f"posts/{me.username}/{id}/{file}",
             },
             ExpiresIn=10,
         )
@@ -240,13 +269,13 @@ async def create_reply(
 
 
 @router.post("/{id}/{type}", status_code=201)
-async def interact_like(
+async def interact(
     id: UUID4,
     type: schemas.InteractType,
     body: schemas.InInteract = Body(...),
     user: User = Depends(auth),
 ):
-    """Note: user can like/share his own post"""
+    """Note: user can like/share/save their own post"""
 
     try:
         # Find existing interaction
@@ -264,85 +293,17 @@ async def interact_like(
             if interaction is None:
                 interaction = Interaction(user=user, post_id=id, type=type)
                 session.add(interaction)
-                session.commit()
 
         # User is removing interaction
         else:
             # Must exist
             if interaction is not None:
                 session.delete(interaction)
-                session.commit()
+
+        session.commit()
         return
 
     except Exception as e:
         error(e)
         session.rollback()
         raise HTTPException(500)
-
-
-def posts_subquery(
-    user_id: int,
-    parent_id: UUID4 = None,
-    ids: List = None,
-    limit: int = 10,
-    skip: int = 0,
-):
-    subquery = (
-        select(
-            Post.id,
-            func.sum(
-                case(
-                    [
-                        (Interaction.type == "like", 1),
-                    ],
-                    else_=0,
-                ),
-            ).label("likes"),
-            func.sum(
-                case(
-                    [
-                        (Interaction.type == "share", 1),
-                    ],
-                    else_=0,
-                ),
-            ).label("shares"),
-            func.max(
-                case(
-                    [
-                        (
-                            and_(
-                                Interaction.type == "like",
-                                (Interaction.user_id == user_id) if user_id else False,
-                            ),
-                            1,
-                        ),
-                    ],
-                    else_=0,
-                ),
-            ).label("liked"),
-            func.max(
-                case(
-                    [
-                        (
-                            and_(
-                                Interaction.type == "share",
-                                (Interaction.user_id == user_id) if user_id else False,
-                            ),
-                            1,
-                        ),
-                    ],
-                    else_=0,
-                ),
-            ).label("shared"),
-        )
-        .join(Interaction, Post.interactions, isouter=True)
-        .filter(Post.parent_id == parent_id if parent_id is not None else True)
-        .filter(Post.id.in_(ids) if ids else True)
-        .group_by(Post.id)
-        .order_by(desc(Post.created_at))
-        .offset(skip)
-        .limit(limit)
-        .subquery()
-    )
-
-    return subquery
