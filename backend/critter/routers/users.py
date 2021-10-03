@@ -5,13 +5,14 @@ from critter.database import session
 from critter.common import auth, auth_optional
 from critter import schemas
 from critter.models.models import Follow, Interaction
+from critter.schemas.base import CoreModel
 from critter.schemas.users import PublicUser
 from critter.controllers import post as ctrl_post
-from fastapi.param_functions import Depends, Query
-from sqlalchemy import select
+from fastapi.param_functions import Body, Depends, Query
+from sqlalchemy import select, delete
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, HTTPException
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload 
 from sqlalchemy.sql.functions import func
 
 # Configuration
@@ -98,6 +99,7 @@ async def get_user_posts(
 
         stmt = select(Post, subquery)
         stmt = stmt.options(joinedload(Post.parent))
+        stmt = stmt.options(selectinload(Post.media))
         stmt = stmt.join(subquery, subquery.c.id == Post.id)
         if likes:
             stmt = stmt.join(Post.interactions)
@@ -118,5 +120,45 @@ async def get_user_posts(
 
     except Exception as e:
         print(e)
+        raise HTTPException(500)
+
+class FollowModel(CoreModel):
+    follow: bool
+
+@router.post("/{username}/follow", status_code=201)
+async def follow_user(
+    username: str,
+    _user: Optional[User] = Depends(auth),
+    follow: bool = Body(FollowModel, embed=True),
+):
+    try:
+        stmt = select(User).filter_by(username=username)
+        user = session.execute(stmt).scalar_one()
+
+        if follow:
+            stmt = select(Follow).where(Follow.followee == user, Follow.follower == _user)
+            res = session.execute(stmt).scalar()
+            if res is not None:
+                return {"detail": "Already following"}
+            follow_instance = Follow(follower=_user, followee=user)
+            session.add(follow_instance)
+        else:
+            stmt = delete(Follow).where(Follow.followee == user, Follow.follower == _user)
+            session.execute(stmt)
+        session.commit()
+
+        return
+
+    except NoResultFound:
+        session.rollback()
+        raise HTTPException(404)
+
+    except HTTPException as exception:
+        session.rollback()
+        raise HTTPException(**exception.__dict__)
+
+    except Exception as e:
+        print(e)
+        session.rollback()
         raise HTTPException(500)
 

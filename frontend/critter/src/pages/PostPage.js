@@ -47,7 +47,6 @@ const PostPage = () => {
     api
       .get(`posts/${id}/replies`)
       .then((res) => {
-        console.log(res)
         setReplies(res.data.posts)
       })
       .catch((e) => {

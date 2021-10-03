@@ -13,7 +13,6 @@ const Home = () => {
     api
       .get('posts')
       .then((res) => {
-        console.log(res.data)
         setPosts(res.data?.posts ?? [])
       })
       .catch((e) => console.error(e))
@@ -33,10 +32,10 @@ const Home = () => {
   }
 
   return (
-    <Container sx={{ mt: 5 }}>
-      <Stack direction="row" spacing={5}>
+    <Container sx={{ mt: 3 }}>
+      <Stack direction="row" spacing={3}>
         {/* Feed */}
-        <Stack flexGrow="1" spacing={5} sx={{ maxWidth: '800px' }}>
+        <Stack flexGrow="1" spacing={3} sx={{ maxWidth: '800px' }}>
           {authenticated && <CreatePost onSubmit={submitPost} />}
           {posts.map((post) => (
             <Post key={post.id} post={post} />

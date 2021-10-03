@@ -13,32 +13,40 @@ import {
 import { useSelector } from 'react-redux'
 import { Switch, Link, Route } from 'react-router-dom'
 import CreatePost from '../components/CreatePost'
-import api, { media } from '../core/endpoints'
 import Post from '../components/Post'
-import { Redirect, useLocation, useParams, useRouteMatch } from 'react-router'
+import { Redirect, useHistory, useLocation, useParams, useRouteMatch } from 'react-router'
 import { Box } from '@material-ui/system'
 import Posts from '../components/Posts'
+import api, { media } from '../core/endpoints'
 
 const UserPage = () => {
   const { username } = useParams()
   const [user, setUser] = useState()
   const [loading, setLoading] = useState(true)
+  const [following, setFollowing] = useState(false)
   const myId = useSelector((state) => state.auth?.user?.id)
   const authenticated = useSelector((state) => state.auth.authenticated)
   const { url } = useRouteMatch()
   const { pathname } = useLocation()
+  const history = useHistory()
 
   useEffect(() => {
     api
       .get(`users/${username}`)
       .then((res) => {
         setUser(res.data.user)
+        setFollowing(res.data.user.is_following)
         setLoading(false)
       })
       .catch((e) => {
         console.error(e)
       })
   }, [username])
+
+  const setFollow = boolean => {
+    api.post(`users/${username}/follow`, { follow: boolean })
+    setFollowing(boolean)
+  }
 
   return (
     <>
@@ -101,17 +109,17 @@ const UserPage = () => {
 
                 {authenticated ? (
                   myId != user.id &&
-                  (user.is_following ? (
-                    <Button variant="text" color="primary">
+                  (following ? (
+                    <Button variant="text" color="primary" onClick={() => setFollow(false)}>
                       Unfollow
                     </Button>
                   ) : (
-                    <Button variant="contained" color="primary">
+                    <Button variant="contained" color="primary" onClick={() => setFollow(true)}>
                       Follow
                     </Button>
                   ))
                 ) : (
-                  <Button disabled variant="contained" color="primary">
+                  <Button  variant="contained" color="primary" onClick={() => history.push('/login')}>
                     Follow
                   </Button>
                 )}
