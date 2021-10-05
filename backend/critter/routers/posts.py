@@ -57,6 +57,61 @@ async def get_posts(
         raise HTTPException(500)
 
 
+@router.get("/top", response_model=schemas.OutPosts)
+async def get_top_posts(
+    me: User = Depends(auth_optional),
+    skip: Optional[int] = Query(0),
+    limit: Optional[int] = Query(10),
+    media: Optional[bool] = Query(False)
+):
+    try:
+        subquery = ctrl_post.get_posts(user_id=me.id if me else None, skip=skip, limit=limit)
+
+        stmt = select(Post, subquery)
+        stmt = stmt.join(subquery, subquery.c.id == Post.id)
+        stmt = stmt.order_by(desc(subquery.c.likes + subquery.c.shares))
+        if media:
+            stmt = stmt.join(Post.media)
+        else:
+            stmt = stmt.join(Post.media, isouter=True)
+        stmt = stmt.options(contains_eager(Post.media))
+
+        results = session.execute(stmt).unique().all()
+        posts = ctrl_post.parse_posts(results)
+        
+        return {"posts": posts}
+
+    except Exception as e:
+        error(e)
+        session.rollback()
+        raise HTTPException(500)
+
+@router.get("/latest", response_model=schemas.OutPosts)
+async def get_latest_posts(
+    me: User = Depends(auth_optional),
+    skip: Optional[int] = Query(0),
+    limit: Optional[int] = Query(10),
+):
+    try:
+        subquery = ctrl_post.get_posts(user_id=me.id if me else None, skip=skip, limit=limit)
+
+        stmt = (
+            select(Post, subquery)
+            .join(subquery, subquery.c.id == Post.id)
+            .order_by(desc(Post.created_at))
+            .options(selectinload(Post.media))
+        )
+
+        results = session.execute(stmt).all()
+        posts = ctrl_post.parse_posts(results)
+        
+        return {"posts": posts}
+
+    except Exception as e:
+        error(e)
+        session.rollback()
+        raise HTTPException(500)
+
 @router.get("/saved", response_model=schemas.OutPosts)
 async def get_saved_posts(
     me: User = Depends(auth),
@@ -64,9 +119,7 @@ async def get_saved_posts(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = ctrl_post.get_posts(
-            user_id=me.id if me else None, skip=skip, limit=limit, 
-        )
+        subquery = ctrl_post.get_posts(user_id=me.id, skip=skip, limit=limit)
 
         stmt = (
             select(Post, subquery)

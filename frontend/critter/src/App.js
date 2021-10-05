@@ -10,6 +10,7 @@ import PostPage from './pages/PostPage'
 import UserPage from './pages/UserPage'
 import BookmarkPage from './pages/BookmarkPage'
 import api from './core/endpoints'
+import ExplorePage from './pages/ExplorePage'
 
 const App = () => {
   const theme = createTheme(themeOptions)
@@ -71,7 +72,9 @@ const App = () => {
           <Route path="/posts/:id">
             <PostPage />
           </Route>
-          <Route path="/explore">WIP</Route>
+          <Route path="/explore">
+            <ExplorePage />
+          </Route>
           <Route path="/bookmarks">
             <BookmarkPage />
           </Route>
