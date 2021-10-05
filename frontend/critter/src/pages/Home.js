@@ -33,15 +33,7 @@ const Home = () => {
 
   return (
     <Container sx={{ mt: 3 }}>
-      <Stack direction="row" spacing={3}>
-        {/* Feed */}
-        <Stack flexGrow="1" spacing={3} sx={{ maxWidth: '800px' }}>
-          {authenticated && <CreatePost onSubmit={submitPost} />}
-          {posts.map((post) => (
-            <Post key={post.id} post={post} />
-          ))}
-        </Stack>
-
+      <Stack direction="row" justifyContent='center' spacing={3}>
         {/* Side */}
         <Stack
           sx={{
@@ -53,6 +45,14 @@ const Home = () => {
           }}
         >
           <Card sx={{ p: 5 }}>Trend</Card>
+        </Stack>
+
+        {/* Feed */}
+        <Stack maxWidth='sm' flexGrow="1" spacing={3}>
+          {authenticated && <CreatePost onSubmit={submitPost} />}
+          {posts.map((post) => (
+            <Post key={post.id} post={post} />
+          ))}
         </Stack>
       </Stack>
     </Container>
