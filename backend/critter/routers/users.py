@@ -12,7 +12,8 @@ from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import select, delete
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, HTTPException
-from sqlalchemy.orm import joinedload, selectinload 
+from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.sql.expression import case, desc 
 from sqlalchemy.sql.functions import func
 
 # Configuration
@@ -26,6 +27,41 @@ async def get_self(user: User = Depends(auth)):
     try:
         user = PublicUser.from_orm(user)
         return user
+    except Exception as e:
+        print(e)
+        raise HTTPException(500)
+
+@router.get("/popular")
+async def get_popular(me: User = Depends(auth_optional)):
+    try:
+        stmt = (
+            select(
+                User,
+                func.count(User.followers).label('followers_num'),
+                func.max(case([(Follow.follower_id == me.id, 1)], else_=0)).label('is_following'),
+                func.max(case([(Follow.followee_id == me.id, 1)], else_=0)).label('is_followed_by'),
+            )
+            .join(User.followers, isouter=True)
+            .group_by(User.id)
+            .order_by(desc('followers_num'))
+        )
+
+        results = session.execute(stmt).mappings().all()
+        
+        # transform = lambda user, stat: user.__dict__ |  {"followers_num": stat, "is_following": }
+        users = [
+            PublicUser(
+                **{
+                    **item.User.__dict__, 
+                    "followers_num": item.followers_num,
+                    "is_following": item.is_following,
+                    "is_followed_by": item.is_followed_by,
+                }
+            ) 
+            for item in results]
+
+        return {"users": users}
+
     except Exception as e:
         print(e)
         raise HTTPException(500)

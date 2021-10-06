@@ -68,7 +68,7 @@ const Post = ({ sx, post, variant = 'normal' }) => {
   const date = new Date(post.created_at).toDateString()
   return (
     <Card onClick={goToPostPage} sx={{ cursor: 'pointer', ...sx }}>
-
+      {/* Profile */}
       <Stack direction="row">
         <Avatar variant="rounded-m" sx={{ mr: 2 }}
           onClick={goToUserPage}

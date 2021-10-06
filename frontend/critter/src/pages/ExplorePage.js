@@ -26,6 +26,7 @@ import Posts from '../components/Posts'
 import api, { media } from '../core/endpoints'
 import TopPosts from '../components/TopPosts'
 import LatestPosts from '../components/LatestPosts'
+import PopularUsers from '../components/PopularUsers'
 
 const ExplorePage = () => {
   const { username } = useParams()
@@ -90,7 +91,7 @@ const ExplorePage = () => {
               <LatestPosts />
             </Route>
             <Route path={`${url}/people`}>
-              people
+              <PopularUsers />
             </Route>
             <Route path={`${url}/media`}>
               <TopPosts hasMedia />

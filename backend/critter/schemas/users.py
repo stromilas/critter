@@ -8,6 +8,7 @@ class PublicUser(CoreModel):
     profile: str
     banner: str
     is_following: Optional[bool]
+    is_followed_by: Optional[bool]
     followers_num: Optional[int]
     followees_num: Optional[int]
     location: Optional[str]
