@@ -21,28 +21,13 @@ import {
   useParams,
   useRouteMatch,
 } from 'react-router'
-import { Box } from '@material-ui/system'
-import Posts from '../components/Posts'
-import api, { media } from '../core/endpoints'
 import TopPosts from '../components/TopPosts'
 import LatestPosts from '../components/LatestPosts'
 import PopularUsers from '../components/PopularUsers'
 
 const ExplorePage = () => {
-  const { username } = useParams()
-  const [user, setUser] = useState()
-  const [loading, setLoading] = useState(true)
-  const [following, setFollowing] = useState(false)
-  const myId = useSelector((state) => state.auth?.user?.id)
-  const authenticated = useSelector((state) => state.auth.authenticated)
   const { url } = useRouteMatch()
   const { pathname } = useLocation()
-  const history = useHistory()
-
-  // 1. Top posts
-  // 2. Latest posts
-  // 3. Most popular people
-  // 4. Top posts with media
 
   return (
     <Container>

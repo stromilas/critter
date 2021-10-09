@@ -38,7 +38,7 @@ const BookmarkPage = () => {
 
   return (
     <Container maxWidth='sm'>
-      <Stack direction='column' gap={3} mt={3} >
+      <Stack direction='column' gap={2} mt={2} >
         {posts?.map(post => (
           <Post key={post.id} post={post} />
         ))}

@@ -5,7 +5,7 @@ import CreatePost from '../components/CreatePost'
 import api from '../core/endpoints'
 import Post from '../components/Post'
 
-const Home = () => {
+const HomePage = () => {
   const [posts, setPosts] = useState([])
   const authenticated = useSelector((state) => state.auth.authenticated)
 
@@ -32,23 +32,15 @@ const Home = () => {
   }
 
   return (
-    <Container sx={{ mt: 3 }}>
-      <Stack direction="row" justifyContent='center' spacing={3}>
+    <Container sx={{ mt: 2 }}>
+      <Stack direction="row" justifyContent='center' spacing={2}>
         {/* Side */}
-        <Stack
-          sx={{
-            width: 300,
-            display: {
-              xs: 'none',
-              sm: 'flex',
-            },
-          }}
-        >
-          <Card sx={{ p: 5 }}>Trend</Card>
-        </Stack>
+        <Card sx={{ width: { xs: 200, md: 250 }, height: '100%', pr: 0 }}>
+          Trend
+        </Card>
 
         {/* Feed */}
-        <Stack maxWidth='sm' flexGrow="1" spacing={3}>
+        <Stack maxWidth='sm' flexGrow="1" spacing={2}>
           {authenticated && <CreatePost onSubmit={submitPost} />}
           {posts.map((post) => (
             <Post key={post.id} post={post} />
@@ -59,4 +51,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default HomePage

@@ -4,7 +4,7 @@ import { CssBaseline, Tab, Tabs } from '@material-ui/core'
 import { ThemeProvider, createTheme } from '@material-ui/core'
 import themeOptions from './theme/main'
 import Header from './components/Header'
-import Home from './pages/Home'
+import HomePage from './pages/HomePage'
 import SignIn from './pages/SignIn'
 import PostPage from './pages/PostPage'
 import UserPage from './pages/UserPage'
@@ -64,7 +64,7 @@ const App = () => {
             ></Route>
           </Header>
           <Route path="/" exact>
-            <Home />
+            <HomePage />
           </Route>
           <Route path="/users/:username">
             <UserPage />
