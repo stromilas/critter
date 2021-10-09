@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux'
 import { media } from '../core/endpoints'
 import { Box } from '@material-ui/system'
 import { api } from '../core/endpoints'
+import { readFile} from '../utils/file'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -217,15 +218,6 @@ const ImagePreview = ({ file, onRemove }) => {
       />
     </Box>
   )
-}
-
-const readFile = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = reject
-    reader.onload = () => resolve(reader.result)
-    reader.readAsArrayBuffer(file)
-  })
 }
 
 const getSignedUrl = async (id, fileName) => {
