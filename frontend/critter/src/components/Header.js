@@ -18,28 +18,22 @@ import {
 } from '@material-ui/core'
 
 const Header = ({ children }) => {
-  const authenticated = useSelector((state) => state.auth.authenticated)
-  const user = useSelector((state) => state.auth.user)
-  const [anchorEl, setAnchorEl] = useState(null)
   const dispatch = useDispatch()
   const history = useHistory()
+  const [anchorEl, setAnchorEl] = useState(null)
+  const authenticated = useSelector((state) => state.auth.authenticated)
+  const user = useSelector((state) => state.auth.user)
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget)
+  const clickMenu = (event) => setAnchorEl(event.currentTarget)
+  const closeMenu = () => setAnchorEl(null)
+
+  const changePage = (path) => {
+    closeMenu()
+    history.push(path)
   }
 
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
-
-  const handleProfile = () => {
-    handleClose()
-    history.push(`/users/${user.username}`)
-  }
-
-  const handleLogout = () => {
-    handleClose()
+  const logout = () => {
+    closeMenu()
     dispatch(authActions.logout())
   }
 
@@ -100,7 +94,7 @@ const Header = ({ children }) => {
               <Box sx={{ mx: 1 }}>
                 <IconButton
                   size="small"
-                  onClick={handleMenu}
+                  onClick={clickMenu}
                   color="inherit"
                   aria-label="User Settings"
                   aria-controls="menu-appbar"
@@ -120,10 +114,11 @@ const Header = ({ children }) => {
                     horizontal: 'right',
                   }}
                   open={Boolean(anchorEl)}
-                  onClose={handleClose}
+                  onClose={closeMenu}
                 >
-                  <MenuItem onClick={handleProfile}>My Profile</MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  <MenuItem onClick={() => changePage(`/users/${user.username}`)}>My Profile</MenuItem>
+                  <MenuItem onClick={() => changePage('/settings')}>Settings</MenuItem>
+                  <MenuItem onClick={logout}>Logout</MenuItem>
                 </Menu>
               </Box>
             </Stack>
