@@ -14,4 +14,12 @@ class PublicUser(CoreModel):
     location: Optional[str]
     website: Optional[str]
 
+
+class UserIn(CoreModel):
+    name: Optional[str]
+    profile: Optional[str]
+    banner: Optional[str]
+    location: Optional[str]
+    website: Optional[str]
+
 PublicUser.update_forward_refs()

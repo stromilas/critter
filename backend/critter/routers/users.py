@@ -1,12 +1,15 @@
 from operator import and_
 from typing import Optional
+import boto3
+from botocore.config import Config
+from critter.core import error
 from critter.models import User, Post
 from critter.database import session
 from critter.common import auth, auth_optional
 from critter import schemas
 from critter.models.models import Follow, Interaction
 from critter.schemas.base import CoreModel
-from critter.schemas.users import PublicUser
+from critter.schemas.users import PublicUser, UserIn
 from critter.controllers import post as ctrl_post
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import select, delete
@@ -15,8 +18,11 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.expression import case, desc 
 from sqlalchemy.sql.functions import func
+from enum import Enum
 
 # Configuration
+boto3.setup_default_session(profile_name="dev")
+
 router = APIRouter(
     prefix="/users", tags=["chirps"], responses={404: {"detail": "Not found"}}
 )
@@ -30,6 +36,23 @@ async def get_self(user: User = Depends(auth)):
     except Exception as e:
         print(e)
         raise HTTPException(500)
+
+@router.put("/me", status_code=201)
+async def update_self(
+    me: User = Depends(auth), 
+    user: UserIn = Body(...),
+):
+    try:
+        print(user.__dict__)
+        for field in user.__fields__:
+            value = getattr(user, field)
+            if value is not None:
+                setattr(me, field, value)
+        session.commit()
+
+    except Exception as e:
+        session.rollback()
+        error(e)
 
 @router.get("/popular")
 async def get_popular(me: User = Depends(auth_optional)):
@@ -64,6 +87,33 @@ async def get_popular(me: User = Depends(auth_optional)):
 
     except Exception as e:
         print(e)
+        raise HTTPException(500)
+
+class UserMedia(Enum):
+    PROFILE='profile'
+    BANNER='banner'
+
+@router.get("/media-endpoint")
+async def get_profile_endpoint(
+    me: User = Depends(auth),
+    media: UserMedia = Query(...),
+    file: str = Query(...),
+):
+    s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
+    try:
+        signed_url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": "critter-public",
+                "Key": f"users/{media.value}/{me.username}/{file}",
+            },
+            ExpiresIn=10,
+        )
+        return signed_url
+
+    except Exception as e:
+        error(e)
+        session.rollback()
         raise HTTPException(500)
 
 

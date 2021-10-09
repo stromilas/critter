@@ -30,7 +30,6 @@ class User(Base):
     posts = relationship("Post", lazy="noload", back_populates="user")
     interactions = relationship("Interaction", lazy="noload", back_populates="user")
 
-
     # Temp. experimental usage
     following = association_proxy('followees', 'followee')
     followed_by = association_proxy('followers', 'follower')
