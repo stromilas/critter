@@ -11,6 +11,7 @@ import UserPage from './pages/UserPage'
 import BookmarkPage from './pages/BookmarkPage'
 import api from './core/endpoints'
 import ExplorePage from './pages/ExplorePage'
+import SettingsPage from './pages/SettingsPage'
 
 const App = () => {
   const theme = createTheme(themeOptions)
@@ -65,6 +66,9 @@ const App = () => {
           </Header>
           <Route path="/" exact>
             <HomePage />
+          </Route>
+          <Route path="/settings">
+            <SettingsPage />
           </Route>
           <Route path="/users/:username">
             <UserPage />
