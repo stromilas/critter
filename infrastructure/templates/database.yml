@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Database Infrastructure
+
+Parameters:
+  AppName:
+    Description: Application Name
+    Type: String
+
+Resources:
+  WebStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.${AWS::Region}.${AWS::URLSuffix}/templates/web.yml
+      Parameters:
+        Stage: !Ref Stage
+
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${TemplateBucket}.s3.${AWS::Region}.${AWS::URLSuffix}/templates/network.yml
+      Parameters:
+        CidrBlock: !Ref CidrBlock
+
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt WebStack.Outputs.WebsiteURL

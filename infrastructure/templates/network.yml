@@ -1,0 +1,262 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Standard VPC configuration
+
+Parameters:
+  Stage:
+    Description: Environment stage
+    Type: String
+    Default: dev
+  CidrBlock:
+    Description: CIDR range for VPC. /16 mask is used for VPC, /20 for each subnet.
+    Type: String
+    AllowedPattern: (^\d([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5]).\d([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5]).\d([01]?|[0-9][0-9]?|2[0-4][0-9]|25[0-5]).\d([01]?|[0-9][0-9]?|2[0-4][0-9]|25[0-5])$)
+    ConstraintDescription: Must be valid CIDR prefix
+
+Resources:
+  # - VPC 
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Join ['/', [!Ref CidrBlock, '16']]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC'
+        - Key: Stage
+          Value: !Ref Stage
+  
+  # - Public Subnets
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      CidrBlock: !Select [ 0, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-PublicSubnetA'
+      
+  # - App Subnets
+
+  AppSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      CidrBlock: !Select [ 3, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AppSubnetA'
+
+  AppSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      CidrBlock: !Select [ 4, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AppSubnetB'
+
+  AppSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 2, !GetAZs ]
+      CidrBlock: !Select [ 5, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AppSubnetC'
+  
+  # - DB Subnets
+
+  DBSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      CidrBlock: !Select [ 6, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-DBSubnetA'
+
+  DBSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      CidrBlock: !Select [ 7, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-DBSubnetB'
+
+  DBSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Select [ 2, !GetAZs ]
+      CidrBlock: !Select [ 8, !Cidr [ !GetAtt VPC.CidrBlock, 9, 12 ]]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-DBSubnetC'
+
+  # - Internet Gateway
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-IGW'
+  
+  InternetGatewayVPCAssociation:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # - Public Route Table
+
+  PublicSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-PublicRouteTable'
+  
+  PublicSubnetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicSubnetRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # - Associate Public Subnets with Public Route Table
+
+  PublicSubnetAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicSubnetRouteTable
+      SubnetId: !Ref PublicSubnetA
+  
+  # - App Route Table
+
+  AppSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AppRouteTable'
+
+  # - Associate App Subnets with App Route Table
+
+  AppSubnetAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSubnetRouteTable
+      SubnetId: !Ref AppSubnetA
+
+  AppSubnetAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSubnetRouteTable
+      SubnetId: !Ref AppSubnetB
+
+  AppSubnetAssociationC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSubnetRouteTable
+      SubnetId: !Ref AppSubnetC
+
+  # - DB Route Table
+
+  DBSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-DBRouteTable'
+
+  # - Associate DB Subnets with DB Route Table
+
+  DBSubnetAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBSubnetRouteTable
+      SubnetId: !Ref DBSubnetA
+
+  DBSubnetAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBSubnetRouteTable
+      SubnetId: !Ref DBSubnetB
+
+  DBSubnetAssociationC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBSubnetRouteTable
+      SubnetId: !Ref DBSubnetC
+
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${AWS::StackName}-VPC'
+  CidrBlock:
+    Value: !GetAtt VPC.CidrBlock
+    Description: CIDR block used with /16 mask
+    Export:
+      Name: !Sub '${AWS::StackName}-CidrBlock'
+  AZs:
+    Value: !Join [',', [!Select [0, !GetAZs ''], !Select [1, !GetAZs ''], !Select [2, !GetAZs '']]]
+    Description: 'List of AZs'
+    Export:
+      Name: !Sub '${AWS::StackName}-AZs'
+  PublicSubnets:
+    Value: !Join [',', [!Ref PublicSubnetA]]
+    Description: 'List of public subnets'
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnets'
+  AppSubnets:
+    Value: !Join [',', [!Ref AppSubnetA, !Ref AppSubnetB, !Ref AppSubnetC]]
+    Description: 'List of compute subnets'
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSubnets'
+  DBSubnets:
+    Value: !Join [',', [!Ref DBSubnetA, !Ref DBSubnetB, !Ref DBSubnetC]]
+    Description: 'List of data subnets'
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSubnets'
+  PublicSubnetA:
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnetA'
+  AppSubnetA:
+    Value: !Ref AppSubnetA
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSubnetA'
+  AppSubnetB:
+    Value: !Ref AppSubnetB
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSubnetB'
+  AppSubnetC:
+    Value: !Ref AppSubnetC
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSubnetC'
+  DBSubnetA:
+    Value: !Ref DBSubnetA
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSubnetA'
+  DBSubnetB:
+    Value: !Ref DBSubnetB
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSubnetB'
+  DBSubnetC:
+    Value: !Ref DBSubnetC
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSubnetC'
