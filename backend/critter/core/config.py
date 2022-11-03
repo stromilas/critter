@@ -1,30 +1,33 @@
 from os import environ
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic import BaseModel
 
 
-class ApplicationConfiguration:
-    def __init__(self, algorithm: str, secret_key: str, aws_secret_key: str):
-        self._algorithm = algorithm
-        self._secret_key = secret_key
-        self._aws_secret_key = aws_secret_key
-
-    @property
-    def secret_key(self) -> str:
-        return self._secret_key
-
-    @property
-    def algorithm(self) -> str:
-        return self._algorithm
-
-    @property
-    def aws_secret_key(self) -> str:
-        return self._aws_secret_key
+class ApplicationConfiguration(BaseModel):
+    environment: str
+    auth_algorithm: str
+    auth_secret_key: str
+    auth_access_token_expires: int
+    aws_access_key: str
+    aws_secret_key: str
+    aws_region: str
+    database_user: str
+    database_password: str
+    database_name: str
+    database_host: str
+    database_port: str
 
 
 config = ApplicationConfiguration(
-    secret_key=environ.get("SECRET_KEY"),
-    algorithm=environ.get("ALGORITHM"),
+    environment=environ.get("ENVIRONMENT"),
+    auth_secret_key=environ.get("AUTH_SECRET_KEY"),
+    auth_algorithm=environ.get("AUTH_ALGORITHM"),
+    auth_access_token_expires=environ.get("AUTH_ACCESS_TOKEN_EXPIRES"),
+    aws_access_key=environ.get("AWS_ACCESS_KEY"),
     aws_secret_key=environ.get("AWS_SECRET_KEY"),
+    aws_region=environ.get("AWS_REGION"),
+    database_user=environ.get("DB_USER"),
+    database_password=environ.get("DB_PASSWORD"),
+    database_name=environ.get("DB_NAME"),
+    database_host=environ.get("DB_HOST"),
+    database_port=environ.get("DB_PORT"),
 )

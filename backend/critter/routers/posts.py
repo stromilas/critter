@@ -16,10 +16,14 @@ from sqlalchemy.orm import contains_eager, joinedload, aliased, selectinload
 from sqlalchemy.sql.expression import case
 from sqlalchemy.sql.functions import func
 from critter.controllers import post as ctrl_post
+from critter.core import config
 import boto3
 
 # Configuration
-boto3.setup_default_session(profile_name="dev")
+boto3.setup_default_session(
+    aws_access_key_id=config.aws_access_key,
+    aws_secret_access_key=config.aws_secret_key,
+)
 
 router = APIRouter(
     prefix="/posts", tags=["posts"], responses={404: {"detail": "Not found"}}
@@ -62,10 +66,12 @@ async def get_top_posts(
     me: User = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
-    media: Optional[bool] = Query(False)
+    media: Optional[bool] = Query(False),
 ):
     try:
-        subquery = ctrl_post.get_posts(user_id=me.id if me else None, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(
+            user_id=me.id if me else None, skip=skip, limit=limit
+        )
 
         stmt = select(Post, subquery)
         stmt = stmt.join(subquery, subquery.c.id == Post.id)
@@ -78,13 +84,14 @@ async def get_top_posts(
 
         results = session.execute(stmt).unique().all()
         posts = ctrl_post.parse_posts(results)
-        
+
         return {"posts": posts}
 
     except Exception as e:
         error(e)
         session.rollback()
         raise HTTPException(500)
+
 
 @router.get("/latest", response_model=schemas.OutPosts)
 async def get_latest_posts(
@@ -93,7 +100,9 @@ async def get_latest_posts(
     limit: Optional[int] = Query(10),
 ):
     try:
-        subquery = ctrl_post.get_posts(user_id=me.id if me else None, skip=skip, limit=limit)
+        subquery = ctrl_post.get_posts(
+            user_id=me.id if me else None, skip=skip, limit=limit
+        )
 
         stmt = (
             select(Post, subquery)
@@ -104,13 +113,14 @@ async def get_latest_posts(
 
         results = session.execute(stmt).all()
         posts = ctrl_post.parse_posts(results)
-        
+
         return {"posts": posts}
 
     except Exception as e:
         error(e)
         session.rollback()
         raise HTTPException(500)
+
 
 @router.get("/saved", response_model=schemas.OutPosts)
 async def get_saved_posts(
@@ -130,7 +140,7 @@ async def get_saved_posts(
 
         results = session.execute(stmt).all()
         posts = ctrl_post.parse_posts(results)
-        
+
         return {"posts": posts}
 
     except Exception as e:

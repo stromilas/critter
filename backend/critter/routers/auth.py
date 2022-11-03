@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from jose import jwt
 from critter.models import User
 from critter.database import session
 from critter.schemas.auth import SignUpForm, Token
@@ -8,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
 from critter.core.security import jwt_context, password_context
 
 # Configuration
@@ -16,13 +15,12 @@ router = APIRouter(
     prefix="/auth", tags=["auth"], responses={404: {"detail": "Not found"}}
 )
 
+
 def tokenise(username: str, name: str) -> Token:
-    expires = datetime.utcnow() + timedelta(minutes=jwt_context.access_token_expire_minutes)
-    unencoded = {
-        "username": username,
-        "name": name,
-        "exp": expires
-    }
+    expires = datetime.utcnow() + timedelta(
+        minutes=jwt_context.access_token_expire_minutes
+    )
+    unencoded = {"username": username, "name": name, "exp": expires}
     encoded = jwt.encode(unencoded, jwt_context.secret_key, jwt_context.algorithm)
     return Token(access_token=encoded, token_type="bearer", expires=expires)
 
@@ -38,10 +36,7 @@ async def login(data: OAuth2PasswordRequestForm = Depends()):
 
         token = tokenise(user.username, user.name)
 
-        response = {
-            'token': token,
-            'user': PublicUser.from_orm(user)
-        }
+        response = {"token": token, "user": PublicUser.from_orm(user)}
 
         return response
 
@@ -58,7 +53,7 @@ async def login(data: OAuth2PasswordRequestForm = Depends()):
 @router.post("/signup")
 async def signup(data: SignUpForm = Depends()):
     try:
-        
+
         stmt = select(User).filter_by(username=data.username)
         user = session.execute(stmt).scalar()
 
@@ -70,16 +65,13 @@ async def signup(data: SignUpForm = Depends()):
             name=data.name,
             password=password_context.hash(secret=data.password),
         )
-        
+
         session.add(user)
         session.commit()
 
         token = tokenise(user.username, user.name)
 
-        response = {
-            'token': token,
-            'user': PublicUser.from_orm(user)
-        }
+        response = {"token": token, "user": PublicUser.from_orm(user)}
 
         return response
 

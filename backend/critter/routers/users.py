@@ -2,7 +2,7 @@ from operator import and_
 from typing import Optional
 import boto3
 from botocore.config import Config
-from critter.core import error
+from critter.core import error, config
 from critter.models import User, Post
 from critter.database import session
 from critter.common import auth, auth_optional
@@ -16,12 +16,15 @@ from sqlalchemy import select, delete
 from sqlalchemy.exc import NoResultFound
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy.sql.expression import case, desc 
+from sqlalchemy.sql.expression import case, desc
 from sqlalchemy.sql.functions import func
 from enum import Enum
 
 # Configuration
-boto3.setup_default_session(profile_name="dev")
+boto3.setup_default_session(
+    aws_access_key_id=config.aws_access_key,
+    aws_secret_access_key=config.aws_secret_key,
+)
 
 router = APIRouter(
     prefix="/users", tags=["chirps"], responses={404: {"detail": "Not found"}}
@@ -37,9 +40,10 @@ async def get_self(user: User = Depends(auth)):
         print(e)
         raise HTTPException(500)
 
+
 @router.put("/me", status_code=201)
 async def update_self(
-    me: User = Depends(auth), 
+    me: User = Depends(auth),
     user: UserIn = Body(...),
 ):
     try:
@@ -54,34 +58,40 @@ async def update_self(
         session.rollback()
         error(e)
 
+
 @router.get("/popular")
 async def get_popular(me: User = Depends(auth_optional)):
     try:
         stmt = (
             select(
                 User,
-                func.count(User.followers).label('followers_num'),
-                func.max(case([(Follow.follower_id == me.id, 1)], else_=0)).label('is_following'),
-                func.max(case([(Follow.followee_id == me.id, 1)], else_=0)).label('is_followed_by'),
+                func.count(User.followers).label("followers_num"),
+                func.max(case([(Follow.follower_id == me.id, 1)], else_=0)).label(
+                    "is_following"
+                ),
+                func.max(case([(Follow.followee_id == me.id, 1)], else_=0)).label(
+                    "is_followed_by"
+                ),
             )
             .join(User.followers, isouter=True)
             .group_by(User.id)
-            .order_by(desc('followers_num'))
+            .order_by(desc("followers_num"))
         )
 
         results = session.execute(stmt).mappings().all()
-        
+
         # transform = lambda user, stat: user.__dict__ |  {"followers_num": stat, "is_following": }
         users = [
             PublicUser(
                 **{
-                    **item.User.__dict__, 
+                    **item.User.__dict__,
                     "followers_num": item.followers_num,
                     "is_following": item.is_following,
                     "is_followed_by": item.is_followed_by,
                 }
-            ) 
-            for item in results]
+            )
+            for item in results
+        ]
 
         return {"users": users}
 
@@ -89,9 +99,11 @@ async def get_popular(me: User = Depends(auth_optional)):
         print(e)
         raise HTTPException(500)
 
+
 class UserMedia(Enum):
-    PROFILE='profile'
-    BANNER='banner'
+    PROFILE = "profile"
+    BANNER = "banner"
+
 
 @router.get("/media-endpoint")
 async def get_profile_endpoint(
@@ -148,7 +160,7 @@ async def get_user(username: str, _user: User = Depends(auth_optional)):
             **user.__dict__,
             followers_num=follower_count,
             followees_num=followee_count,
-            is_following=following
+            is_following=following,
         )
 
         return {"user": user}
@@ -170,7 +182,7 @@ async def get_user_posts(
     _user: Optional[User] = Depends(auth_optional),
     skip: Optional[int] = Query(0),
     limit: Optional[int] = Query(10),
-    likes: Optional[bool] = Query(False)
+    likes: Optional[bool] = Query(False),
 ):
     try:
         subquery = ctrl_post.get_posts(
@@ -189,7 +201,9 @@ async def get_user_posts(
         stmt = stmt.join(subquery, subquery.c.id == Post.id)
         if likes:
             stmt = stmt.join(Post.interactions)
-            stmt = stmt.filter(and_(Interaction.user_id == user.id, Interaction.type == 'like'))
+            stmt = stmt.filter(
+                and_(Interaction.user_id == user.id, Interaction.type == "like")
+            )
         else:
             stmt = stmt.filter(Post.user_id == user.id)
 
@@ -208,8 +222,10 @@ async def get_user_posts(
         print(e)
         raise HTTPException(500)
 
+
 class FollowModel(CoreModel):
     follow: bool
+
 
 @router.post("/{username}/follow", status_code=201)
 async def follow_user(
@@ -222,14 +238,18 @@ async def follow_user(
         user = session.execute(stmt).scalar_one()
 
         if follow:
-            stmt = select(Follow).where(Follow.followee == user, Follow.follower == _user)
+            stmt = select(Follow).where(
+                Follow.followee == user, Follow.follower == _user
+            )
             res = session.execute(stmt).scalar()
             if res is not None:
                 return {"detail": "Already following"}
             follow_instance = Follow(follower=_user, followee=user)
             session.add(follow_instance)
         else:
-            stmt = delete(Follow).where(Follow.followee == user, Follow.follower == _user)
+            stmt = delete(Follow).where(
+                Follow.followee == user, Follow.follower == _user
+            )
             session.execute(stmt)
         session.commit()
 
@@ -247,4 +267,3 @@ async def follow_user(
         print(e)
         session.rollback()
         raise HTTPException(500)
-

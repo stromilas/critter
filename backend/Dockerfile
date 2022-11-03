@@ -16,4 +16,5 @@ RUN poetry install
 COPY . /app
 
 # Run application
-CMD ["poetry", "run", "uvicorn", "main:app", "--port", "8000"]
+EXPOSE 8000
+CMD ["poetry", "run", "python", "serve_prod.py"]

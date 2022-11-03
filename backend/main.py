@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from critter.routers import auth
 from critter.routers import posts
 from critter.routers import users
+from dotenv import load_dotenv
+
+load_dotenv(".env")
 
 app = FastAPI()
 

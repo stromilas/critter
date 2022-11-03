@@ -1,11 +1,12 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from .connector import Connector
+from critter.core import config
 
-# Create engine
-engine = create_engine('postgresql+psycopg2://postgres:rootcritter@localhost:5432/critters')
+connector = Connector(
+    username=config.database_user,
+    password=config.database_password,
+    database=config.database_name,
+    host=config.database_host,
+    port=config.database_port,
+)
 
-# Configure session 
-Session = sessionmaker(bind=engine)
-
-# Instantiate session
-session = Session()
+session = connector.session()
