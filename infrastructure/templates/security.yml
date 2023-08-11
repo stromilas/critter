@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Security Groups
+
+Parameters:
+  VPC:
+    Description: VPC into which subnets will be created
+    Type: String
+
+Resources:
+  # Compute Security Group
+  ComputeSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Attached to Lambda ENIs within a VPC
+      SecurityGroupEgress:
+        - Description: "Allow HTTP Outgress"
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+        - Description: "Allow HTTPS Outgress"
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+        - Description: "Allow PostgreSQL Outgress"
+          FromPort: 5432
+          ToPort: 5432
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupIngress:
+        - Description: "Allow HTTP Ingress"
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+        - Description: "Allow HTTPS Ingress"
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+      VpcId: !Ref VPC
+
+  # Database Cluster Security Group
+  DatabaseSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Database SG
+      SecurityGroupIngress:
+        - Description: "Allow Lambda SG Ingress"
+          FromPort: 5432
+          ToPort: 5432
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref LambdaSG
+        - Description: "Allow Bastion SG Ingress"
+          FromPort: 5432
+          ToPort: 5432
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref BastionSG
+      VpcId: !Ref VPC
+
+Outputs:
+  LambdaSG:
+    Value: !Ref LambdaSG
+  DatabaseSG:
+    Value: !Ref DatabaseSG

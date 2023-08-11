@@ -1,26 +1,130 @@
-AWSTemplateFormatVersion: 2010-09-09
-Description: Database Infrastructure
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Deploy database into provided VPC.
 
 Parameters:
-  AppName:
-    Description: Application Name
+  Stage:
+    Description: Environment stage.
     Type: String
+    Default: dev
+  ClusterSubnets:
+    Description: >
+      Subnets to be used by the database cluster.
+      Comma-separated values.
+      E.g.: eu-west-2a,eu-west-2b,eu-west-2c
+    Type: String
+  EngineVersion:
+    Description: PostgreSQL version compatible with Aurora Serverles.
+    Type: String
+    Default: 10.14
+  SecondsUntilAutoPause:
+    Description: The time, in seconds, before a Serverless Aurora cluster is paused.
+    Type: Number
+    MinValue: 1
+    MaxValue: 86400
+    Default: 300
+  AutoPause:
+    Description: >
+      Enable automatic pause for a Serverless Aurora cluster. A cluster can be paused only when it has no connections. 
+      If a cluster is paused for more than seven days, the cluster might be backed up with a snapshot. 
+      In this case, the cluster is restored when there is a request to connect to it.
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+  MaxCapacity:
+    Description: The maximum capacity units for a Serverless Aurora cluster.
+    Type: String
+    AllowedValues: [2, 4, 8, 16, 32, 64, 192, 384]
+    Default: 2
+  MinCapacity:
+    Description: The minimum capacity units for a Serverless Aurora cluster.
+    Type: String
+    AllowedValues: [2, 4, 8, 16, 32, 64, 192, 384]
+    Default: 2
+  ClusterSecurityGroup:
+    Description: Security group ID for database cluster instances
+    Type: String
+  DBUsername:
+    Description: The master user name for the DB instance (ignored when SnapshotID is set, value used from snapshot).
+    Type: String
+    Default: postgres
+  DBName:
+    Description: Database name
+    Type: String
+  DBBackupRetentionPeriod:
+    Description: "The number of days to keep snapshots of the cluster."
+    Type: Number
+    MinValue: 1
+    MaxValue: 35
+    Default: 30
+
+Conditions:
+  IsProdStage: !Equals [!Ref Stage, "prod"]
 
 Resources:
-  WebStack:
-    Type: AWS::CloudFormation::Stack
+  # Database Secret
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
     Properties:
-      TemplateURL: !Sub https://${TemplateBucket}.s3.${AWS::Region}.${AWS::URLSuffix}/templates/web.yml
-      Parameters:
-        Stage: !Ref Stage
+      Name: !Sub "${AWS::StackName}-DBSecret"
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${DBUsername}"}'
+        GenerateStringKey: "password"
+        PasswordLength: 30
+        ExcludeCharacters: '"@/\'
 
-  NetworkStack:
-    Type: AWS::CloudFormation::Stack
+  # Database Cluster
+  DBCluster:
+    DependsOn: DBSecret
+    Type: AWS::RDS::DBCluster
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
     Properties:
-      TemplateURL: !Sub https://${TemplateBucket}.s3.${AWS::Region}.${AWS::URLSuffix}/templates/network.yml
-      Parameters:
-        CidrBlock: !Ref CidrBlock
+      DeletionProtection: !If [IsProdStage, True, False]
+      DatabaseName: !Ref DBName
+      BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      DBSubnetGroupName: !Ref DBClusterSubnetGroup
+      EnableHttpEndpoint: false
+      Engine: aurora-postgresql
+      EngineMode: serverless
+      EngineVersion: !Ref EngineVersion
+      MasterUsername:
+        !Join [
+          "",
+          [
+            "{{resolve:secretsmanager:",
+            !Ref DBSecret,
+            ":SecretString:username}}",
+          ],
+        ]
+      MasterUserPassword:
+        !Join [
+          "",
+          [
+            "{{resolve:secretsmanager:",
+            !Ref DBSecret,
+            ":SecretString:password}}",
+          ],
+        ]
+      ScalingConfiguration:
+        AutoPause: !Ref AutoPause
+        MaxCapacity: !Ref MaxCapacity
+        MinCapacity: !Ref MinCapacity
+        SecondsUntilAutoPause: !Ref SecondsUntilAutoPause
+      StorageEncrypted: true
+      VpcSecurityGroupIds:
+        - !Ref ClusterSecurityGroup
+
+  SecretTargetAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      TargetId: !Ref DBCluster
+      SecretId: !Ref DBSecret
+      TargetType: AWS::RDS::DBCluster
 
 Outputs:
-  WebsiteURL:
-    Value: !GetAtt WebStack.Outputs.WebsiteURL
+  DBSecretArn:
+    Value: !Ref DBSecret
